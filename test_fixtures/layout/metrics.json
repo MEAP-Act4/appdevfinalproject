@@ -1,0 +1,47 @@
+{
+  "$comment": [
+    "Canonical Layout_Engine metrics shared by BOTH clients (Requirement 13.1).",
+    "",
+    "The Mobile_Client (Dart, flutter_app/lib/core/layout/layout_mode.dart) and",
+    "the Web_Client (TypeScript, react_app/src/core/layout.ts) each hold these",
+    "numbers as their own single authority, because a Dart file cannot import a",
+    "TypeScript file and vice versa. That duplication is a necessity, not a",
+    "choice, so the two copies can silently drift. This file is the referee: it",
+    "records the numbers once, at the repo root outside both client trees, and",
+    "each client's compliance suite reads it and asserts its own constants equal",
+    "it. A divergence in either client fails that client's suite, naming this",
+    "file as the authority both were measured against.",
+    "",
+    "Read by:",
+    "  - react_app/src/__tests__/compliance/metrics-examples.node.test.ts",
+    "  - flutter_app/test/compliance/metrics_examples_test.dart",
+    "",
+    "medium.contentMax is null, not a sentinel: Medium imposes no content cap,",
+    "and both clients model that as null (Dart double?, TS number | null). The",
+    "cross-client comparison therefore treats null === null as agreement.",
+    "",
+    "This is the first fixture under test_fixtures/; task 9.1 adds more, so the",
+    "directory is a shared convention rather than a one-off. Units are CSS/",
+    "logical pixels. gutter/pad are multiples of 8 (Requirement 1.8); the 560 and",
+    "1440 content caps and the 16/24/32 metrics are the fixed WattVision values",
+    "and are allowed to appear here and in test expectations as literals."
+  ],
+  "requirements": ["2.3", "2.4", "2.5", "2.6", "2.11", "13.1"],
+  "columns": 12,
+  "breakpoints": {
+    "medium": 600,
+    "expanded": 1024
+  },
+  "contentMax": 1440,
+  "metrics": {
+    "compact": { "gutter": 16, "pad": 16, "contentMax": 560 },
+    "medium": { "gutter": 16, "pad": 24, "contentMax": null },
+    "expanded": { "gutter": 24, "pad": 32, "contentMax": 1440 }
+  },
+  "subCompactRule": {
+    "$comment": "A sub-320 viewport still resolves to Compact with 16 outer padding (Requirement 2.11 totality). No floor below which resolution is undefined.",
+    "width": 300,
+    "mode": "compact",
+    "pad": 16
+  }
+}

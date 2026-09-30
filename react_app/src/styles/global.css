@@ -1,0 +1,1269 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--t-base) var(--ease-enter),
+    color var(--t-base) var(--ease-enter);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: var(--size-title);
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input[type='text'],
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * App frame
+ * -------------------------------------------------------------------------*/
+
+/*
+ * The root container no longer imposes the fixed 560 cap unconditionally.
+ * Requirement 2.10 replaces it: the app fills the viewport width up to the
+ * Expanded content cap. The 560 phone width is preserved but scoped to Compact
+ * only (below), so `.app` here carries no `max-width` — Medium fills the
+ * viewport, and in Expanded the `.grid12` scaffold's own 1440 `--grid-content-max`
+ * (task 5.6) governs content width. `margin: 0 auto` stays so the container
+ * remains centred whenever a cap does apply.
+ *
+ * This is the single highest-risk change in the feature: the Compact rule that
+ * follows must reproduce today's phone rendering byte-for-byte. See task 5.7.
+ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/*
+ * Compact keeps the historical 560 phone cap exactly. `data-layout` is written
+ * synchronously by `useLayoutMode` before first paint (App.tsx, task 5.7), so
+ * this resolves on the initial render and Compact viewports render unchanged.
+ * Medium and Expanded leave `.app` uncapped: Medium fills the viewport
+ * (Requirement 2.4), Expanded defers to the grid's 1440 cap (Requirement 2.6).
+ */
+:root[data-layout='compact'] .app {
+  max-width: 560px;
+}
+
+.app__body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s3) var(--s2);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.topbar__title {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+ * Cards — DESIGN.md §3
+ * -------------------------------------------------------------------------*/
+
+.card {
+  background: var(--surface);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--card-padding);
+  transition: border-color var(--t-base) var(--ease-enter),
+    background var(--t-base) var(--ease-enter),
+    transform var(--t-base) var(--ease-enter);
+}
+
+.card--raised {
+  background: var(--surface-raised);
+}
+
+.card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card--tappable {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.card--tappable:hover {
+  background: var(--surface-raised);
+}
+
+.card__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.section {
+  margin-top: var(--s4);
+}
+
+.section__heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: 0 var(--s1) var(--s2);
+}
+
+.section__title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  /* Requirement 11.4: the accent is text here, so it takes the text variant. */
+  color: var(--accent-text);
+}
+
+.section__subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.small {
+  font-size: 12px;
+}
+
+.tiny {
+  font-size: 11px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Metrics
+ * -------------------------------------------------------------------------*/
+
+.metric {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
+
+.metric__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.05;
+}
+
+.metric__unit {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.metric-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.metric-tile__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Status pill and banners
+ * -------------------------------------------------------------------------*/
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  border: 1px solid currentColor;
+  transition: color var(--t-base) var(--ease-enter),
+    background var(--t-base) var(--ease-enter);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.dot--live {
+  animation: pulse 1.6s var(--ease-enter) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 5px transparent;
+    opacity: 0.55;
+  }
+}
+
+:root[data-reduce-motion='true'] .dot--live {
+  animation: none;
+}
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+  padding: var(--s3);
+  border-radius: var(--radius-control);
+  border-left: 4px solid currentColor;
+  animation: banner-in var(--t-base) var(--ease-enter);
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.banner__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.banner__title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.banner__message {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.banner__close {
+  flex: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Buttons
+ * -------------------------------------------------------------------------*/
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 48px;
+  padding: 0 var(--s4);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  transition: transform var(--t-fast) var(--ease-enter),
+    background var(--t-fast) var(--ease-enter),
+    border-color var(--t-fast) var(--ease-enter);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  width: 100%;
+}
+
+.btn--outline {
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.btn--outline:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn--ghost {
+  color: var(--text-secondary);
+  min-height: 40px;
+  padding: 0 var(--s2);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.btn--danger {
+  color: var(--alert);
+}
+
+.btn--icon {
+  min-height: 40px;
+  width: 40px;
+  padding: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-secondary);
+}
+
+.btn--icon:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--surface-raised);
+}
+
+/* ---------------------------------------------------------------------------
+ * Bottom tab bar
+ * -------------------------------------------------------------------------*/
+
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  background: var(--surface);
+  border-top: var(--hairline) solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+  flex: none;
+}
+
+.tabbar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 0 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  position: relative;
+  transition: color var(--t-fast) var(--ease-enter);
+}
+
+.tabbar__item[aria-selected='true'] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tabbar__indicator {
+  position: absolute;
+  top: 4px;
+  height: 30px;
+  width: 58px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  transition: opacity var(--t-base) var(--ease-enter);
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 20px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--alert);
+}
+
+/* ---------------------------------------------------------------------------
+ * Tab panels — cross-fade + slight slide
+ * -------------------------------------------------------------------------*/
+
+.panel {
+  animation: panel-in var(--t-base) var(--ease-enter);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.stagger > * {
+  animation: panel-in var(--t-base) var(--ease-enter) both;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 55ms; }
+.stagger > *:nth-child(3) { animation-delay: 110ms; }
+.stagger > *:nth-child(4) { animation-delay: 165ms; }
+.stagger > *:nth-child(5) { animation-delay: 220ms; }
+.stagger > *:nth-child(6) { animation-delay: 275ms; }
+.stagger > *:nth-child(7) { animation-delay: 330ms; }
+.stagger > *:nth-child(8) { animation-delay: 385ms; }
+
+:root[data-reduce-motion='true'] .stagger > * {
+  animation-delay: 0ms !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Sensor carousel
+ * -------------------------------------------------------------------------*/
+
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 0 var(--s3) var(--s2);
+}
+
+.switcher__arrow {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: opacity var(--t-fast) var(--ease-enter),
+    border-color var(--t-fast) var(--ease-enter);
+}
+
+.switcher__arrow:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.switcher__arrow:disabled {
+  opacity: 0.32;
+}
+
+.switcher__label {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.switcher__name {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: var(--s2);
+}
+
+.dots__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  transition: width var(--t-base) var(--ease-enter),
+    background var(--t-base) var(--ease-enter);
+  padding: 0;
+}
+
+.dots__dot--flowing {
+  background: var(--gradient-green);
+}
+
+.dots__dot--active {
+  width: 22px;
+  background: var(--accent);
+}
+
+.carousel {
+  display: flex;
+  transition: transform var(--t-base) var(--ease-enter);
+  will-change: transform;
+}
+
+.carousel__page {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: var(--s2) var(--s3) var(--s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.carousel__viewport {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * Charts
+ * -------------------------------------------------------------------------*/
+
+.sparkline {
+  display: block;
+  width: 100%;
+  height: 104px;
+}
+
+.sparkline__grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.sparkline__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gauge {
+  display: block;
+  width: 100%;
+  height: 44px;
+}
+
+.gauge__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--s2);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.bar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+
+.bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-green);
+  transition: width var(--t-base) var(--ease-enter),
+    background var(--t-base) var(--ease-enter);
+}
+
+.bar--thin {
+  height: 3px;
+  background: var(--border);
+}
+
+/* ---------------------------------------------------------------------------
+ * Settings rows
+ * -------------------------------------------------------------------------*/
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3);
+  width: 100%;
+  text-align: left;
+  border-bottom: var(--hairline) solid var(--border);
+  transition: background var(--t-fast) var(--ease-enter);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row--tappable:hover {
+  background: var(--surface-raised);
+}
+
+.row--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.row--column {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s2);
+}
+
+.row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row__title {
+  font-weight: 500;
+}
+
+.row__subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.row__value {
+  flex: none;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  /* Requirement 11.4: the accent is text here, so it takes the text variant. */
+  color: var(--accent-text);
+}
+
+.row__value--muted {
+  color: var(--text-secondary);
+}
+
+.row--danger .row__title {
+  color: var(--alert);
+}
+
+.switch {
+  flex: none;
+  width: 46px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  position: relative;
+  transition: background var(--t-fast) var(--ease-enter);
+}
+
+.switch[aria-checked='true'] {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--accent);
+}
+
+.switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform var(--t-fast) var(--ease-enter),
+    background var(--t-fast) var(--ease-enter);
+}
+
+.switch[aria-checked='true'] .switch__knob {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+
+.select {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 8px 10px;
+  max-width: 55%;
+}
+
+.textinput {
+  width: 100%;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 10px 12px;
+  transition: border-color var(--t-fast) var(--ease-enter);
+}
+
+.textinput:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Gate screen
+ * -------------------------------------------------------------------------*/
+
+.gate {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s3);
+  padding: var(--s5) var(--s4);
+  position: relative;
+  overflow: hidden;
+}
+
+.gate__wash {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(4px);
+  pointer-events: none;
+  animation: drift 14s ease-in-out infinite alternate;
+}
+
+.gate__wash--one {
+  top: -90px;
+  left: -90px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 13%, transparent),
+    transparent 70%
+  );
+}
+
+.gate__wash--two {
+  bottom: -110px;
+  right: -110px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--gradient-green) 13%, transparent),
+    transparent 70%
+  );
+  animation-duration: 18s;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(26px, 20px, 0);
+  }
+}
+
+:root[data-reduce-motion='true'] .gate__wash {
+  animation: none;
+}
+
+.gate__mark {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.gate__core {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 10%, transparent);
+  transition: border-color var(--t-slow) var(--ease-enter),
+    box-shadow var(--t-slow) var(--ease-enter);
+  z-index: 1;
+}
+
+.gate__mark--busy .gate__core {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.gate__mark--failed .gate__core {
+  border-color: color-mix(in srgb, var(--alert) 70%, transparent);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--alert) 20%, transparent);
+}
+
+.gate__ring {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0;
+}
+
+.gate__mark--busy .gate__ring {
+  animation: sonar 2.4s var(--ease-enter) infinite;
+}
+
+.gate__ring:nth-of-type(2) {
+  animation-delay: 0.8s;
+}
+
+.gate__ring:nth-of-type(3) {
+  animation-delay: 1.6s;
+}
+
+@keyframes sonar {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+:root[data-reduce-motion='true'] .gate__ring {
+  animation: none !important;
+}
+
+.gate__title {
+  text-align: center;
+  font-size: var(--size-title);
+  font-weight: 600;
+}
+
+.gate__copy {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist__row {
+  display: flex;
+  gap: var(--s2);
+  padding: var(--s2) 0;
+  border-bottom: var(--hairline) solid var(--border);
+}
+
+.checklist__row:last-child {
+  border-bottom: none;
+}
+
+.checklist__icon {
+  flex: none;
+  width: 20px;
+  text-align: center;
+}
+
+.checklist__label--done {
+  font-weight: 500;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.device-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  width: 100%;
+  text-align: left;
+  transition: background var(--t-fast) var(--ease-enter);
+}
+
+.device-row:hover {
+  background: var(--surface-raised);
+}
+
+.device-row__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------------------
+ * Modal / sheet
+ * -------------------------------------------------------------------------*/
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+  animation: fade-in var(--t-fast) var(--ease-enter);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * The Diagnostics_Sheet keeps its phone width until Expanded. Per task 5.7 it
+ * "widens only in Expanded", so the 560 cap applies in Compact *and* Medium and
+ * is lifted only in Expanded, where the sheet may use the wider layout. The base
+ * rule therefore carries no `max-width`; the two capped bands add it back below.
+ */
+.sheet {
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  border: var(--hairline) solid var(--border);
+  padding: var(--s3);
+  animation: sheet-in var(--t-base) var(--ease-enter);
+  box-shadow: var(--shadow);
+}
+
+/*
+ * Compact and Medium hold the sheet at phone width. Compact is unchanged from
+ * today; Medium also caps so the sheet does not stretch across a tablet-width
+ * viewport before the Expanded dashboard layout exists to hold it.
+ */
+:root[data-layout='compact'] .sheet,
+:root[data-layout='medium'] .sheet {
+  max-width: 560px;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+
+.sheet__title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--s3);
+  border-bottom: var(--hairline) solid var(--border);
+  margin-bottom: var(--s3);
+}
+
+.tabs__tab {
+  padding: var(--s2) 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color var(--t-fast) var(--ease-enter),
+    border-color var(--t-fast) var(--ease-enter);
+}
+
+.tabs__tab[aria-selected='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.kv {
+  display: flex;
+  gap: var(--s2);
+  padding: 5px 0;
+}
+
+.kv__key {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.kv__value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.table th {
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding-bottom: var(--s1);
+}
+
+.table td {
+  padding: 6px 0;
+  border-bottom: var(--hairline) solid var(--border);
+}
+
+.table tr:hover td {
+  background: var(--surface-raised);
+}
+
+.log {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log__line--out {
+  color: var(--accent);
+}
+
+.log__line--err {
+  color: var(--alert);
+}
+
+.log__line--note {
+  color: var(--watch);
+}
+
+.log__line--in {
+  color: var(--text-secondary);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  transition: border-color var(--t-fast) var(--ease-enter),
+    color var(--t-fast) var(--ease-enter);
+}
+
+.chip:hover,
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.stack--tight {
+  gap: var(--s2);
+}
+
+.row-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Grid_12 — the Layout_Engine's 12-column composition (task 5.6)
+ *
+ * CSS Grid, because it gives every one of Requirement 2's constraints natively:
+ * twelve equal columns (2.2), a per-mode gutter and outer padding (2.3–2.5), an
+ * Expanded content cap that is centred (2.6), and auto-placement that wraps a
+ * child which does not fit the remaining columns onto the next row (2.7, 2.8) —
+ * no JavaScript packing.
+ *
+ * The three per-mode custom properties are defined once, on the
+ * `:root[data-layout='…']` selectors that `useLayoutMode` (task 5.4) sets, and
+ * they are built from the existing `--s3`/`--s4`/`--s5` spacing steps (16/24/32).
+ * Because gutter and pad are those tokens rather than fresh literals, Requirement
+ * 1.8 (multiples of 8) holds by construction. `--grid-content-max` is the one
+ * place the Expanded 1440 and Compact 560 caps live in CSS; Medium takes `none`,
+ * mirroring the layout module's `null`. No `@media (min-width…)` appears — the
+ * grid keys off the data-layout attribute only, keeping `src/core/layout.ts` the
+ * single authority for the 600/1024 thresholds (Requirement 2.1).
+ * -------------------------------------------------------------------------*/
+
+:root[data-layout='compact'] {
+  --grid-gutter: var(--s3); /* 16 — Req 2.5 */
+  --grid-pad: var(--s3); /* 16 — Req 2.5 */
+  --grid-content-max: 560px; /* preserves today's phone layout — Req 2.5, 2.10 */
+}
+
+:root[data-layout='medium'] {
+  --grid-gutter: var(--s3); /* 16 — Req 2.4 */
+  --grid-pad: var(--s4); /* 24 — Req 2.4 */
+  --grid-content-max: none; /* fills the viewport — Req 2.4 */
+}
+
+:root[data-layout='expanded'] {
+  --grid-gutter: var(--s4); /* 24 — Req 2.3 */
+  --grid-pad: var(--s5); /* 32 — Req 2.3 */
+  --grid-content-max: 1440px; /* capped and centred — Req 2.6 */
+}
+
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr)); /* equal columns — Req 2.2 */
+  gap: var(--grid-gutter);
+  max-width: var(--grid-content-max); /* Req 2.6 */
+  margin-inline: auto; /* Req 2.6 — centred */
+  padding-inline: var(--grid-pad);
+}
+
+.span-4 {
+  grid-column: span 4;
+}
+
+.span-8 {
+  grid-column: span 8;
+}
+
+.span-12 {
+  grid-column: span 12;
+}

@@ -1,0 +1,40 @@
+# Node / React
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+*.iml
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# Generated native host projects (recreate with `flutter create .`)
+flutter_app/android/
+flutter_app/ios/
+flutter_app/linux/
+flutter_app/macos/
+flutter_app/windows/
+flutter_app/web/
+
+# Arduino build output
+firmware/**/build/
+*.hex
+*.elf
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Exports
+*.csv
+
+# MCP config holds the DESIGNmd API key - never commit
+.kiro/settings/mcp.json

@@ -1,0 +1,34 @@
+{
+  "$comment": "Cross-client parity fixture (Requirement 13.2, design Property 30). A FAULT: the inlet reads flow while both outlets read zero — an implausible topology the firmware flags. English locale, canonical units. Confirms both clients agree on the FAULT Status token plus non-zero live/average/total/cost strings. See slow-leak-es.json for the full SCHEMA description. All strings derived by running the real Flutter formatters.",
+  "name": "fault",
+  "settings": {
+    "flowUnit": "lpm",
+    "volumeUnit": "l",
+    "tariffBsPerCubicMetre": 5.0,
+    "locale": "en",
+    "sensorNames": ["Main Inlet", "Outlet A", "Outlet B"]
+  },
+  "lines": [
+    "D,88,120000,2.00,0.00,0.00,300.0,0.0,0.0,2.00,0.02,0.50,FAULT,0,5"
+  ],
+  "windowStats": {
+    "day": { "averageLpm": 1.5, "totalLitres": 2160.0 },
+    "threeDay": { "averageLpm": 1.2, "totalLitres": 5184.0 },
+    "week": { "averageLpm": 0.9, "totalLitres": 9072.0 }
+  },
+  "expected": {
+    "status": "FAULT",
+    "liveFlow0": "2.00 L/min",
+    "liveFlow1": "0.00 L/min",
+    "liveFlow2": "0.00 L/min",
+    "dayAverage": "1.50 L/min",
+    "dayTotal": "2160.0 L",
+    "dayCost": "Bs. 10.80",
+    "threeDayAverage": "1.20 L/min",
+    "threeDayTotal": "5184.0 L",
+    "threeDayCost": "Bs. 25.92",
+    "weekAverage": "0.90 L/min",
+    "weekTotal": "9072.0 L",
+    "weekCost": "Bs. 45.36"
+  }
+}

@@ -1,0 +1,20 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    avoid_print: true
+    unawaited_futures: true
+
+analyzer:
+  exclude:
+    - build/**
+    # tool/ holds one-off developer scratch scripts (e.g. ratios.dart) that are
+    # not shipped in lib/ or run in the test suite; excluded like build/**.
+    - tool/**
+    - android/**
+    - ios/**
+  language:
+    strict-casts: true
+    strict-raw-types: true

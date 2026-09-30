@@ -1,0 +1,73 @@
+{
+  "$comment": [
+    "Canonical Dashboard_View grid composition shared by BOTH clients (Requirement 13.1).",
+    "",
+    "The Dashboard_View is built by each client independently — the Mobile_Client",
+    "(Dart, flutter_app/lib/ui/dashboard/dashboard_view.dart) and the Web_Client",
+    "(TypeScript, react_app/src/screens/DashboardView.tsx) — because a Dart file",
+    "cannot import a TypeScript file and vice versa. Both derive the composition",
+    "as data: a single ordered List<Grid12Cell> built from the Layout_Mode, not",
+    "branching layout code (design.md, Dashboard composition). That per-client",
+    "duplication can silently drift, so this file is the referee. It records the",
+    "expected ordered cells and their column spans once, at the repo root outside",
+    "both client trees, and each client's Property 29 suite asserts its own",
+    "composition equals this array exactly, in order, including spans. A",
+    "divergence between the clients cannot pass because both read this same file.",
+    "",
+    "Read by (Property 29 tests, task 9.14 — not yet written):",
+    "  - react_app/src/__tests__/compliance/composition-examples.node.test.ts",
+    "  - flutter_app/test/compliance/composition_examples_test.dart",
+    "",
+    "Reader shape contract (keep stable so both clients parse identically):",
+    "  modes: object keyed by Layout_Mode name ('compact' | 'medium' | 'expanded').",
+    "  Each mode has:",
+    "    grid    (bool)  — true when the mode renders the Grid_12 Dashboard_View,",
+    "                      false when it renders the Sensor_Carousel instead.",
+    "    cells   (array) — ordered cells, each { role, span } where span is the",
+    "                      Grid_12 column span (1..12). Present and non-empty only",
+    "                      when grid is true; an empty array when grid is false.",
+    "    note    (string, optional) — human-readable explanation for grid:false.",
+    "  role values are stable identifiers, not display text:",
+    "    'kpi-main-inlet' | 'kpi-outlet-a' | 'kpi-outlet-b' | 'main-chart' | 'alerts-panel'.",
+    "",
+    "Compact is documented explicitly as carousel-only (grid:false, cells:[]).",
+    "design.md maps only Medium and Expanded to the Dashboard_View; Compact",
+    "resolves to the Sensor_Carousel and has no Grid_12 composition. Property 29",
+    "ranges over the three Layout_Modes read from this file, so Compact is present",
+    "as a mode whose asserted composition is 'no grid composition' — a client that",
+    "wrongly builds a grid in Compact fails against grid:false.",
+    "",
+    "Span arithmetic (Requirement 2.2, Grid_12): every run of cells sums to 12.",
+    "  expanded: 4+4+4 = 12 (KPI_Row run), then 8+4 = 12 (chart + alerts run).",
+    "  medium:   4+4+4 = 12 (KPI_Row run), then 12 (chart), then 12 (alerts).",
+    "KPI cell order is fixed: Main Inlet, Outlet A, Outlet B (Requirement 3.2)."
+  ],
+  "requirements": ["3.1", "3.2", "3.3", "3.4", "13.1"],
+  "modes": {
+    "compact": {
+      "grid": false,
+      "cells": [],
+      "note": "Compact renders the Sensor_Carousel, not the Grid_12 Dashboard_View. No grid composition."
+    },
+    "medium": {
+      "grid": true,
+      "cells": [
+        { "role": "kpi-main-inlet", "span": 4 },
+        { "role": "kpi-outlet-a", "span": 4 },
+        { "role": "kpi-outlet-b", "span": 4 },
+        { "role": "main-chart", "span": 12 },
+        { "role": "alerts-panel", "span": 12 }
+      ]
+    },
+    "expanded": {
+      "grid": true,
+      "cells": [
+        { "role": "kpi-main-inlet", "span": 4 },
+        { "role": "kpi-outlet-a", "span": 4 },
+        { "role": "kpi-outlet-b", "span": 4 },
+        { "role": "main-chart", "span": 8 },
+        { "role": "alerts-panel", "span": 4 }
+      ]
+    }
+  }
+}

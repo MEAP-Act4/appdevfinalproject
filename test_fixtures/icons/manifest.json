@@ -1,0 +1,4 @@
+{
+  "$comment": "Shared domain-icon glyph keys both clients must expose (Requirement 10.3). Structural icons (chevron/close/check/plus/refresh/expand) are a separate closed set and are NOT listed here.",
+  "glyphs": ["droplet", "valve", "gauge", "pipe", "wave"]
+}

@@ -1,0 +1,760 @@
+{
+  "meta": {
+    "designSystem": "WattVision",
+    "kit": "groquispe100inf-max/design-md-sistema-de-monitoreo-el-ctrico-wattvision",
+    "license": "MIT",
+    "purpose": "Machine-readable Design_Token_Registry for the Web_Client. Mirrors flutter_app/lib/core/theme/token_registry.dart value for value, including extension rationales and the pastel thresholds.",
+    "stylesheet": "react_app/src/styles/tokens.css",
+    "mirroredBy": "flutter_app/lib/core/theme/token_registry.dart",
+    "keying": "Every entry in tokens, extensions, highContrastDarkExtensions and lightAppearanceExtensions is keyed by its CSS custom-property name. The selector field records the tokens.css block the declaration lives in, so the bidirectional check in the compliance suite can scope its lookup. Because the lookup key is selector-plus-name, the same custom-property name may appear in more than one group: --text-secondary is a WattVision token in the dark block and a Token_Extension override in the hc-dark block, and that is the design rather than a collision.",
+    "groupedSelectors": "Task 3.2 grouped the dark block's prelude as \":root[data-theme='dark'], :root[data-theme='hc-dark']\" so High_Contrast_Dark inherits the whole §2 dark palette rather than restating it. Entries declared in that block record the grouped prelude verbatim in their selector field. The compliance suite's stylesheet parser collapses whitespace runs inside a prelude, so the CSS is free to break the two selectors across lines.",
+    "hexCase": "Hex values are recorded lowercase to match tokens.css byte for byte. WattVision writes them uppercase; comparisons are case-insensitive. The argb field carries the Flutter-side 0xAARRGGBB form so the Dart registry can mirror without re-deriving.",
+    "requirements": ["1.1", "1.9", "1.10", "9.8"],
+    "resolvedAmbiguities": [
+      {
+        "id": "two-greens",
+        "summary": "WattVision §2 names #32D74B as the secondary accent while §3 names #30D158 for the chart area gradient. These are two distinct greens and both are WattVision values.",
+        "resolution": "Registered as two separate tokens: --normal (#32d74b, secondary accent, live status and normal values) and --gradient-green (#30d158, chart area gradient partner). Neither is a Token_Extension and neither carries a rationale, because both are sourced from WattVision.",
+        "decidedBy": "orchestrator, task 1.7",
+        "mirrorNote": "Task 1.6 must reproduce this split as two TokenSpec entries, not one."
+      },
+      {
+        "id": "section-labels",
+        "summary": "Requirement 1.6 enumerates eleven colours as '§2 colour tokens', but row hover, border and alert box fill are specified in WattVision §3.",
+        "resolution": "The section field records the section the value actually comes from. The requirement16 flag marks the eleven colours Requirement 1.6 enumerates, so the compliance suite selects them by flag rather than by section string."
+      }
+    ],
+    "excluded": {
+      "color-scheme": "A standard CSS property, not a custom property, so it is outside the registry."
+    },
+    "highContrastNaming": "Requirement 9.2's overrides are NOT exposed as --hc-* custom properties. CSS reaches a High_Contrast_Dark palette by redeclaring the same two property names inside a more specific block, so every consumer keeps reading var(--text-secondary) and var(--border) and no component has to know which appearance is active. The --hc-* spelling exists only on the Flutter side, where design_tokens.dart has no selector mechanism and needs distinct field names: hcTextSecondary and hcBorder, recorded as the flutterName of each highContrastDarkExtensions entry."
+  },
+
+  "tokens": {
+    "--bg": {
+      "flutterName": "background",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#121212",
+      "argb": "0xFF121212",
+      "spec": "Primary background",
+      "requirement16": true
+    },
+    "--surface": {
+      "flutterName": "surface",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#1e1e1e",
+      "argb": "0xFF1E1E1E",
+      "spec": "Card surface; §3 repeats it as the card background",
+      "requirement16": true
+    },
+    "--accent": {
+      "flutterName": "accent",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root",
+      "value": "#00e5ff",
+      "argb": "0xFF00E5FF",
+      "spec": "Primary accent (data) — charts, main KPIs, action buttons",
+      "requirement16": true
+    },
+    "--alert": {
+      "flutterName": "alert",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root",
+      "value": "#ff453a",
+      "argb": "0xFFFF453A",
+      "spec": "Alert accent — consumption spikes, vampire alerts; §3 reuses it for alert text and the 4px left border",
+      "requirement16": true
+    },
+    "--normal": {
+      "flutterName": "normal",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root",
+      "value": "#32d74b",
+      "argb": "0xFF32D74B",
+      "spec": "Secondary accent — live status and normal values",
+      "requirement16": true,
+      "note": "Distinct from --gradient-green. See meta.resolvedAmbiguities.two-greens."
+    },
+    "--gradient-green": {
+      "flutterName": "gradientGreen",
+      "type": "color",
+      "section": "§3",
+      "selector": ":root",
+      "value": "#30d158",
+      "argb": "0xFF30D158",
+      "spec": "Chart area gradient partner",
+      "requirement16": true,
+      "note": "A WattVision value in its own right, not a Token_Extension and not a variant of --normal. See meta.resolvedAmbiguities.two-greens."
+    },
+    "--surface-raised": {
+      "flutterName": "surfaceRaised",
+      "type": "color",
+      "section": "§3",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#252525",
+      "argb": "0xFF252525",
+      "spec": "Table row hover background",
+      "requirement16": true
+    },
+    "--border": {
+      "flutterName": "border",
+      "type": "color",
+      "section": "§3",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#2c2c2e",
+      "argb": "0xFF2C2C2E",
+      "spec": "Subtle 1px card border, chart grid lines, table row bottom border",
+      "requirement16": true
+    },
+    "--text-primary": {
+      "flutterName": "textPrimary",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#ffffff",
+      "argb": "0xFFFFFFFF",
+      "spec": "Primary text",
+      "requirement16": true
+    },
+    "--text-secondary": {
+      "flutterName": "textSecondary",
+      "type": "color",
+      "section": "§2",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#98989d",
+      "argb": "0xFF98989D",
+      "spec": "Secondary text (labels)",
+      "requirement16": true
+    },
+    "--alert-fill": {
+      "flutterName": "alertBoxFill",
+      "type": "color",
+      "section": "§3",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#3a1c1c",
+      "argb": "0xFF3A1C1C",
+      "spec": "Alert box background",
+      "requirement16": true
+    },
+
+    "--radius-card": {
+      "flutterName": "radiusCard",
+      "type": "length",
+      "section": "§3",
+      "selector": ":root",
+      "value": "16px",
+      "numeric": 16,
+      "unit": "px",
+      "spec": "Cards: border-radius 16px",
+      "requirement17": true
+    },
+    "--card-padding": {
+      "flutterName": "cardPadding",
+      "type": "length",
+      "section": "§3",
+      "selector": ":root",
+      "value": "20px",
+      "numeric": 20,
+      "unit": "px",
+      "spec": "Cards: internal padding 20px",
+      "requirement17": true,
+      "note": "20 is not a multiple of 8. It is a WattVision §3 component value, not a layout gap, gutter or outer padding, so Requirement 1.8 does not apply to it. layoutSpacing is false."
+    },
+    "--hairline": {
+      "flutterName": "hairline",
+      "type": "length",
+      "section": "§3",
+      "selector": ":root",
+      "value": "1px",
+      "numeric": 1,
+      "unit": "px",
+      "spec": "Cards: subtle border 1px solid #2C2C2E; tables: row border-bottom 1px",
+      "requirement17": true
+    },
+
+    "--font-sans": {
+      "flutterName": "fontSans",
+      "type": "font-family",
+      "section": "§4",
+      "selector": ":root",
+      "value": "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "spec": "Titles: Inter SemiBold; Body: Inter Regular",
+      "note": "Inter is the WattVision family. The trailing stack is a platform fallback chain, not a WattVision value."
+    },
+    "--font-mono": {
+      "flutterName": "fontMono",
+      "type": "font-family",
+      "section": "§4",
+      "selector": ":root",
+      "value": "'JetBrains Mono', 'Fira Code', ui-monospace, 'SF Mono', monospace",
+      "spec": "KPI metrics (Watts, kWh, Bs): JetBrains Mono (or Fira Code) Bold",
+      "note": "Both WattVision-sanctioned families are listed in the declared order. The remainder is a platform fallback chain."
+    },
+    "--size-title": {
+      "flutterName": "sizeTitle",
+      "type": "length",
+      "section": "§4",
+      "selector": ":root",
+      "value": "24px",
+      "numeric": 24,
+      "unit": "px",
+      "spec": "Titles: Inter SemiBold 24px",
+      "requirement17": true
+    },
+    "--size-kpi": {
+      "flutterName": "sizeKpi",
+      "type": "length",
+      "section": "§4",
+      "selector": ":root",
+      "value": "32px",
+      "numeric": 32,
+      "unit": "px",
+      "spec": "KPI metrics: JetBrains Mono Bold 32px",
+      "requirement17": true
+    },
+    "--size-body": {
+      "flutterName": "sizeBody",
+      "type": "length",
+      "section": "§4",
+      "selector": ":root",
+      "value": "14px",
+      "numeric": 14,
+      "unit": "px",
+      "spec": "Body: Inter Regular 14px",
+      "requirement17": true
+    },
+
+    "--s2": {
+      "flutterName": "s2",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "8px",
+      "numeric": 8,
+      "unit": "px",
+      "spec": "Spacing in multiples of 8px (8, 16, 24, 32)",
+      "layoutSpacing": true
+    },
+    "--s3": {
+      "flutterName": "s3",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "16px",
+      "numeric": 16,
+      "unit": "px",
+      "spec": "Spacing in multiples of 8px (8, 16, 24, 32)",
+      "layoutSpacing": true
+    },
+    "--s4": {
+      "flutterName": "s4",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "24px",
+      "numeric": 24,
+      "unit": "px",
+      "spec": "Spacing in multiples of 8px (8, 16, 24, 32)",
+      "layoutSpacing": true
+    },
+    "--s5": {
+      "flutterName": "s5",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "32px",
+      "numeric": 32,
+      "unit": "px",
+      "spec": "Spacing in multiples of 8px (8, 16, 24, 32)",
+      "layoutSpacing": true
+    },
+    "--s6": {
+      "flutterName": "s6",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "40px",
+      "numeric": 40,
+      "unit": "px",
+      "spec": "Further step on the §5 multiple-of-8 scale",
+      "layoutSpacing": true,
+      "note": "§5 enumerates 8, 16, 24 and 32 as examples of the multiple-of-8 rule. 40 continues the same scale and satisfies it."
+    },
+    "--s7": {
+      "flutterName": "s7",
+      "type": "length",
+      "section": "§5",
+      "selector": ":root",
+      "value": "48px",
+      "numeric": 48,
+      "unit": "px",
+      "spec": "Further step on the §5 multiple-of-8 scale",
+      "layoutSpacing": true,
+      "note": "As --s6."
+    }
+  },
+
+  "layout": {
+    "section": "§5",
+    "columns": 12,
+    "spacingBase": 8,
+    "enumeratedSteps": [8, 16, 24, 32],
+    "rule": "Gaps, gutters and outer padding are whole multiples of spacingBase.",
+    "note": "Per-Layout_Mode gutter, outer padding and content cap values are owned by react_app/src/core/layout.ts (task 5.2) and flutter_app/lib/core/layout/layout_mode.dart (task 5.1). They are deliberately not restated here, and not in CSS."
+  },
+
+  "extensions": {
+    "--accent-text": {
+      "flutterName": "accentText",
+      "type": "color-alias",
+      "selector": ":root",
+      "value": "var(--accent)",
+      "rationale": "WattVision §2 names one accent and does not distinguish graphical use from text use. Requirement 11.4 forces the distinction: where the accent is used as text it has to clear 4.5:1, and the light appearance's accent #0091a7 only reaches 3.74:1 on the light card surface. Splitting the accent into a graphical token and a text token keeps the graphical accent exactly as WattVision specifies it while giving the text use somewhere to be darkened. In every dark appearance the text token aliases the accent — #00e5ff measures 10.84:1 on #1e1e1e — so nothing changes there and the alias records that fact rather than duplicating the value.",
+      "consumedBy": ".section__title and .row__value in global.css — the two places the accent was previously rendered as text",
+      "requirement": "11.4",
+      "note": "Declared in the base :root block as an alias, so it follows --accent automatically in the dark appearances. The light block overrides it outright; see lightAppearanceExtensions.--accent-text.",
+      "measured": "Dark and High_Contrast_Dark: 10.84:1 on --surface. Light: 5.79:1 on --surface, 5.31:1 on --bg, 4.99:1 on --surface-raised, against 3.74:1 / 3.43:1 / 3.22:1 for the raw light accent."
+    },
+    "--scrim": {
+      "flutterName": "scrim",
+      "type": "color",
+      "selector": ":root",
+      "value": "rgba(0, 0, 0, 0.6)",
+      "rationale": "WattVision §3 specifies card and table treatments and says nothing about modal presentation, so the veil behind a dialog has no value to transcribe. The Web_Client has shipped this translucent black since before the Design_Token_Registry existed, as a literal in global.css; task 3.2 promotes it to a token so the literal-colour scan has nothing left to baseline in that file.",
+      "consumedBy": "The .scrim overlay behind the Diagnostics_Sheet, the Calibration dialog and every modal surface",
+      "note": "Deliberately declared once in :root rather than per appearance. A veil carries no palette meaning and darkening the page underneath is the same gesture in every appearance, so an appearance-specific value would be a behaviour change dressed up as tokenisation.",
+      "mirrorNote": "Web_Client-only at present. The Mobile_Client draws its modal barriers with the Flutter framework default and has no scrim literal of its own, so task 3.1 has nothing to mirror. The flutterName is recorded in advance for whichever task first gives the Flutter client an explicit barrier colour; until then this is a known one-sided entry rather than a parity break in a shared value."
+    },
+    "--watch": {
+      "flutterName": "watch",
+      "type": "color",
+      "selector": ":root",
+      "value": "#ffd60a",
+      "argb": "0xFFFFD60A",
+      "rationale": "WattVision §2 supplies no intermediate advisory colour between the secondary accent (#32D74B) and the alert accent (#FF453A). The firmware Status vocabulary requires one for WATCH, which is a deviation observed but not yet confirmed.",
+      "consumedBy": "WATCH Status pill, WATCH alert banner, envelope gauge negative breach, WATCH Alert_Entry rows",
+      "requirement": "1.10",
+      "statusAffordance": "Required. Requirement 1.11 forbids conveying WATCH by colour alone, so every amber presentation carries a text label or shape alongside it."
+    },
+    "--watch-fill": {
+      "flutterName": "watchBoxFill",
+      "type": "color",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#3a331c",
+      "argb": "0xFF3A331C",
+      "rationale": "WattVision §3 specifies an alert box fill (#3A1C1C) only for the alert state. The WATCH state needs the same boxed treatment, so this value is the §3 recipe applied to the amber Token_Extension at the same lightness and chroma relationship.",
+      "consumedBy": "WATCH alert banner background, WATCH Alert_Entry row background",
+      "derivedFrom": "--watch, following the §3 --alert / --alert-fill relationship"
+    },
+    "--normal-fill": {
+      "flutterName": "normalBoxFill",
+      "type": "color",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#17301c",
+      "argb": "0xFF17301C",
+      "rationale": "As --watch-fill: WattVision §3 gives a boxed fill for the alert state only, and the OK state needs the same treatment to read as a peer of WATCH and LEAK rather than as unstyled text.",
+      "consumedBy": "OK Status banner background, OK Alert_Entry row background",
+      "derivedFrom": "--normal, following the §3 --alert / --alert-fill relationship"
+    },
+    "--idle": {
+      "flutterName": "idle",
+      "type": "color",
+      "selector": ":root",
+      "value": "#636366",
+      "argb": "0xFF636366",
+      "rationale": "WattVision §2 has no neutral inactive colour. The firmware Status vocabulary includes IDLE (no flow and no link activity), which must be visually distinct from OK rather than borrowing the secondary accent, since IDLE is not a healthy-flow signal.",
+      "consumedBy": "IDLE Status pill, disconnected link chip, disabled controls, chart series with no data"
+    },
+    "--radius-control": {
+      "flutterName": "radiusControl",
+      "type": "length",
+      "selector": ":root",
+      "value": "12px",
+      "numeric": 12,
+      "unit": "px",
+      "rationale": "WattVision §3 specifies a 16px radius for cards only. Controls nested inside a 16px card need a smaller radius so the corners stay visually concentric rather than competing with the card edge.",
+      "consumedBy": "Buttons, inputs, the Tariff field, segmented switchers, dialog surfaces",
+      "layoutSpacing": false
+    },
+    "--radius-pill": {
+      "flutterName": "radiusPill",
+      "type": "length",
+      "selector": ":root",
+      "value": "999px",
+      "numeric": 999,
+      "unit": "px",
+      "rationale": "WattVision §3 specifies no pill geometry. Status pills need a fully rounded shape, which is expressed as an arbitrarily large radius rather than a computed half-height.",
+      "consumedBy": "Status pills, link chips, channel selector chips",
+      "layoutSpacing": false
+    },
+    "--s1": {
+      "flutterName": "s1",
+      "type": "length",
+      "selector": ":root",
+      "value": "4px",
+      "numeric": 4,
+      "unit": "px",
+      "rationale": "WattVision §5 puts spacing on multiples of 8. 4px is a half-step below the scale, kept for intra-component insets — the gap between a value and its unit suffix, or a pill's vertical padding — where an 8px step is visibly loose.",
+      "consumedBy": "Intra-component insets only: pill padding, value/unit spacing, icon/label spacing",
+      "layoutSpacing": false,
+      "note": "Deliberately flagged layoutSpacing: false. Requirement 1.8 constrains layout gaps, gutters and outer padding; --s1 must never be used for any of those, and the compliance suite excludes it from the multiple-of-8 assertion on that basis."
+    },
+    "--size-label": {
+      "flutterName": "sizeLabel",
+      "type": "length",
+      "selector": ":root",
+      "value": "12px",
+      "numeric": 12,
+      "unit": "px",
+      "rationale": "WattVision §4 defines three sizes (24 title, 32 KPI, 14 body) and names secondary text as label text in §2 without giving it a size. Dense surfaces — table headers, axis ticks, timestamps — need a step below body.",
+      "consumedBy": "Calibration_Table headers, chart axis labels, Alert_Entry timestamps, KPI unit suffixes",
+      "floorNote": "Requirement 8.7 treats this as the floor: Calibration_Table text must not shrink below the label size in Compact."
+    },
+    "--motion-instant": {
+      "flutterName": "motionInstant",
+      "type": "duration",
+      "selector": ":root",
+      "value": "120ms",
+      "numeric": 120,
+      "unit": "ms",
+      "rationale": "WattVision §1–§6 specify no motion durations. A named scale is required so the Reduce_Motion contract is one attribute flip rather than a hunt through the CSS.",
+      "consumedBy": "Hover and focus state changes, pill colour transitions"
+    },
+    "--motion-fast": {
+      "flutterName": "motionFast",
+      "type": "duration",
+      "selector": ":root",
+      "value": "200ms",
+      "numeric": 200,
+      "unit": "ms",
+      "rationale": "As --motion-instant.",
+      "consumedBy": "Chip and button presses, small enter/exit transitions"
+    },
+    "--motion-base": {
+      "flutterName": "motionBase",
+      "type": "duration",
+      "selector": ":root",
+      "value": "320ms",
+      "numeric": 320,
+      "unit": "ms",
+      "rationale": "As --motion-instant.",
+      "consumedBy": "Animated metric interpolation, Bs_Equivalence changes, Layout_Mode transitions"
+    },
+    "--motion-slow": {
+      "flutterName": "motionSlow",
+      "type": "duration",
+      "selector": ":root",
+      "value": "520ms",
+      "numeric": 520,
+      "unit": "ms",
+      "rationale": "As --motion-instant.",
+      "consumedBy": "Carousel page transitions, sheet and dialog presentation"
+    },
+    "--ease-enter": {
+      "flutterName": "easeEnter",
+      "type": "easing",
+      "selector": ":root",
+      "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "rationale": "WattVision specifies no easing curves. Entering and exiting motion need different curves so arrival reads as settling rather than stopping.",
+      "consumedBy": "Every enter transition in both clients"
+    },
+    "--ease-exit": {
+      "flutterName": "easeExit",
+      "type": "easing",
+      "selector": ":root",
+      "value": "cubic-bezier(0.55, 0, 1, 0.45)",
+      "rationale": "As --ease-enter.",
+      "consumedBy": "Every exit transition in both clients"
+    },
+    "--t-fast": {
+      "flutterName": "tFast",
+      "type": "duration-alias",
+      "selector": ":root",
+      "value": "var(--motion-fast)",
+      "reduceMotionSelector": ":root[data-reduce-motion='true']",
+      "reduceMotionValue": "1ms",
+      "rationale": "Not a WattVision concept. An indirection layer so Reduce_Motion collapses every transition by redefining three properties, which is what makes Requirement 11.6's at-most-1ms guarantee checkable in one place.",
+      "consumedBy": "Every CSS transition that would otherwise reference --motion-fast directly"
+    },
+    "--t-base": {
+      "flutterName": "tBase",
+      "type": "duration-alias",
+      "selector": ":root",
+      "value": "var(--motion-base)",
+      "reduceMotionSelector": ":root[data-reduce-motion='true']",
+      "reduceMotionValue": "1ms",
+      "rationale": "As --t-fast.",
+      "consumedBy": "Every CSS transition that would otherwise reference --motion-base directly"
+    },
+    "--t-slow": {
+      "flutterName": "tSlow",
+      "type": "duration-alias",
+      "selector": ":root",
+      "value": "var(--motion-slow)",
+      "reduceMotionSelector": ":root[data-reduce-motion='true']",
+      "reduceMotionValue": "1ms",
+      "rationale": "As --t-fast.",
+      "consumedBy": "Every CSS transition that would otherwise reference --motion-slow directly"
+    },
+    "--on-accent": {
+      "flutterName": "onAccent",
+      "type": "color",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "#121212",
+      "argb": "0xFF121212",
+      "rationale": "WattVision §2 names the accent as a fill for action buttons but gives no colour for text sitting on that fill. Primary text (#FFFFFF) on #00E5FF fails contrast, so the background colour is reused as the on-accent foreground.",
+      "consumedBy": "Label and icon colour inside filled accent buttons and filled chips",
+      "note": "Equal to --bg in the dark appearance by construction; #ffffff in the light appearance, recorded separately under lightAppearanceExtensions."
+    },
+    "--shadow": {
+      "flutterName": "shadowDark",
+      "type": "shadow",
+      "selector": ":root[data-theme='dark'], :root[data-theme='hc-dark']",
+      "value": "0 18px 40px rgba(0, 0, 0, 0.45)",
+      "rationale": "WattVision §3 describes card separation through a subtle 1px border and forbids thick border lines; it specifies no elevation. A low-opacity shadow lifts modal surfaces off the background without adding a competing border.",
+      "consumedBy": "Dialogs, the Diagnostics_Sheet, dropdown surfaces",
+      "note": "One of the three rgba() values in the registry, alongside --scrim and the light --shadow. All three are declared inside tokens.css, which is the single stylesheet the literal-colour scanner exempts."
+    }
+  },
+
+  "highContrastDarkExtensions": {
+    "_about": {
+      "rationale": "The whole High_Contrast_Dark palette is a Token_Extension. WattVision §2 supplies one dark palette and no high-contrast variant, so neither override below can be sourced from it. Requirement 9.2 asks for an appearance that raises text and border contrast while keeping the background and surface colours inside the §2 dark family, which is why this group holds exactly two entries and not a palette: everything not listed here is inherited unchanged from the grouped dark block.",
+      "consumedBy": "The High_Contrast_Dark appearance only, offered alongside Dark and Follow system in the primary Appearance control",
+      "selector": ":root[data-theme='hc-dark']",
+      "constraint": "Requirement 9.2 requires background, surface and surface-raised to be identical to Dark and the text and border ratios to be no worse than Dark's. Both halves are checkable precisely because the dark block is shared by selector grouping rather than copied.",
+      "flutterMirror": "Task 3.1 registers these as kTokenExtensions entries hcTextSecondary and hcBorder, applied through AppPalette.highContrastDark = dark.copyWith(...)."
+    },
+    "--text-secondary": {
+      "flutterName": "hcTextSecondary",
+      "type": "color",
+      "selector": ":root[data-theme='hc-dark']",
+      "value": "#c7c7cc",
+      "argb": "0xFFC7C7CC",
+      "rationale": "The §2 secondary text #98989d already clears 4.5:1 on the card surface at 5.81:1, so Requirement 11.1 does not force a change; Requirement 9.2 does. A high-contrast appearance is only worth offering if it measurably improves on the default, so secondary text is lightened to the point where it reads as primary-adjacent rather than as a de-emphasised grey.",
+      "consumedBy": "High_Contrast_Dark secondary text and labels: card subtitles, axis ticks, Alert_Entry timestamps, Calibration_Table headers",
+      "requirement": "9.2",
+      "measured": "9.90:1 on --surface, 11.12:1 on --bg, 9.10:1 on --surface-raised, against 5.81:1 / 6.52:1 / 5.34:1 in Dark. Strictly better on every surface.",
+      "derivedFrom": "--text-secondary, lightened along the same neutral ramp"
+    },
+    "--border": {
+      "flutterName": "hcBorder",
+      "type": "color",
+      "selector": ":root[data-theme='hc-dark']",
+      "value": "#48484a",
+      "argb": "0xFF48484A",
+      "rationale": "The §3 hairline #2c2c2e is deliberately subtle — it measures 1.20:1 against the card surface, which is a separation cue rather than a visible line. Requirement 9.2 needs the border to become perceivable, so the hairline is lightened to roughly the midpoint between the §3 border and the §2 secondary text. It stays a 1px hairline: WattVision §6 forbids thick border lines, so the contrast is raised by colour and never by weight.",
+      "consumedBy": "High_Contrast_Dark card borders, chart grid lines, table row bottom borders, focus outlines",
+      "requirement": "9.2",
+      "measured": "1.83:1 on --surface, 2.05:1 on --bg, 1.68:1 on --surface-raised, against 1.20:1 / 1.34:1 / 1.10:1 in Dark. Strictly better on every surface. Requirement 11.7's 3:1 floor applies to focus indicators rather than to decorative hairlines, and is met by the accent.",
+      "derivedFrom": "--border, lightened along the same neutral ramp"
+    }
+  },
+
+  "lightAppearanceExtensions": {
+    "_about": {
+      "rationale": "The entire light palette is a Token_Extension. WattVision §6 forbids white backgrounds, so no light value can be sourced from §2. The palette is retained because Requirement 9.3 keeps a light appearance available as an accessibility affordance, presented with the Requirement 9.4 advisory rather than as a peer appearance.",
+      "consumedBy": "The light appearance only, reachable from the accessibility section of the Settings tab",
+      "selector": ":root[data-theme='light']",
+      "constraint": "Requirement 9.5 requires the light appearance to meet the Requirement 11 contrast criteria, which is why the accents are darkened rather than reused.",
+      "flutterMirror": "Task 1.6 registers these as kTokenExtensions entries named light<Token>, e.g. lightBackground."
+    },
+    "--bg": {
+      "flutterName": "lightBackground",
+      "type": "color",
+      "value": "#f4f5f7",
+      "argb": "0xFFF4F5F7",
+      "rationale": "A near-neutral off-white stands in for the §2 #121212 background. It is deliberately not pure white, since §6 forbids white backgrounds outright.",
+      "consumedBy": "Light appearance page background"
+    },
+    "--surface": {
+      "flutterName": "lightSurface",
+      "type": "color",
+      "value": "#ffffff",
+      "argb": "0xFFFFFFFF",
+      "rationale": "Card surfaces need to sit above the light background, and the only value above #F4F5F7 in this family is white. This is the single point where the light appearance contradicts WattVision §6, and it is the reason the light appearance carries the Requirement 9.4 advisory instead of appearing as a peer appearance option.",
+      "consumedBy": "Light appearance card surface",
+      "conflict": "WattVision §6 — no white backgrounds"
+    },
+    "--surface-raised": {
+      "flutterName": "lightSurfaceRaised",
+      "type": "color",
+      "value": "#eceef1",
+      "argb": "0xFFECEEF1",
+      "rationale": "The §3 row hover treatment needs to darken rather than lighten in a light appearance, so the raised surface inverts its relationship to the base surface.",
+      "consumedBy": "Light appearance table row hover and focus background"
+    },
+    "--border": {
+      "flutterName": "lightBorder",
+      "type": "color",
+      "value": "#d9dde3",
+      "argb": "0xFFD9DDE3",
+      "rationale": "The §3 hairline #2C2C2E is invisible-by-inversion on a light surface; this is its light-appearance counterpart at an equivalent perceived weight.",
+      "consumedBy": "Light appearance card borders, chart grid lines, table row bottom borders"
+    },
+    "--text-primary": {
+      "flutterName": "lightTextPrimary",
+      "type": "color",
+      "value": "#121212",
+      "argb": "0xFF121212",
+      "rationale": "Primary text inverts to the §2 background value, which keeps the light appearance inside the WattVision hue family and gives 17.4:1 on white.",
+      "consumedBy": "Light appearance primary text"
+    },
+    "--text-secondary": {
+      "flutterName": "lightTextSecondary",
+      "type": "color",
+      "value": "#5b5f66",
+      "argb": "0xFF5B5F66",
+      "rationale": "The §2 secondary text #98989D measures below 4.5:1 on a light surface, so the light appearance needs a darker neutral to satisfy Requirements 9.5 and 11.1.",
+      "consumedBy": "Light appearance secondary text and labels"
+    },
+    "--accent": {
+      "flutterName": "lightAccent",
+      "type": "color",
+      "value": "#0091a7",
+      "argb": "0xFF0091A7",
+      "rationale": "Neon cyan #00E5FF is near-white in luminance and fails contrast against a light surface. The light appearance darkens the same hue so the accent stays recognisable while remaining legible.",
+      "consumedBy": "Light appearance charts, KPI emphasis, action button fills",
+      "note": "Darkened for graphical use, which needs 3:1. It reaches 3.74:1 on the light card surface and so still fails the 4.5:1 text threshold; --accent-text below is the value text uses."
+    },
+    "--accent-text": {
+      "flutterName": "lightAccentText",
+      "type": "color",
+      "value": "#00707f",
+      "argb": "0xFF00707F",
+      "rationale": "As extensions.--accent-text, but this is the entry that does the work. The light accent #0091a7 measures 3.74:1 on the light card surface, so Requirement 11.4 applies: the accent may stay as a graphical element but the text has to change. Darkening the same hue one further step clears 4.5:1 on all three light surfaces, which keeps the accent recognisable as the accent rather than falling back to the primary text colour and losing the emphasis altogether.",
+      "consumedBy": "Light appearance .section__title and .row__value — the accent used as text",
+      "requirement": "11.4",
+      "measured": "5.79:1 on --surface, 5.31:1 on --bg, 4.99:1 on --surface-raised. All three clear the Requirement 11.1 4.5:1 threshold.",
+      "derivedFrom": "--accent, darkened at the same hue and full saturation"
+    },
+    "--alert": {
+      "flutterName": "lightAlert",
+      "type": "color",
+      "value": "#d3261c",
+      "argb": "0xFFD3261C",
+      "rationale": "As --accent: the §2 alert red is darkened for legibility on a light surface while holding the same hue.",
+      "consumedBy": "Light appearance LEAK and FAULT text, alert left border"
+    },
+    "--normal": {
+      "flutterName": "lightNormal",
+      "type": "color",
+      "value": "#1e8e33",
+      "argb": "0xFF1E8E33",
+      "rationale": "As --accent: the §2 secondary accent darkened for a light surface.",
+      "consumedBy": "Light appearance OK Status, live indicators"
+    },
+    "--gradient-green": {
+      "flutterName": "lightGradientGreen",
+      "type": "color",
+      "value": "#1e8e33",
+      "argb": "0xFF1E8E33",
+      "rationale": "The §2/§3 green distinction collapses in the light appearance: at the darkened lightness needed for legibility, #32D74B and #30D158 converge to the same value, so both resolve to one colour here.",
+      "consumedBy": "Light appearance chart area gradient",
+      "note": "Equal to the light --normal by construction. The distinction recorded in meta.resolvedAmbiguities.two-greens holds in the dark appearances only."
+    },
+    "--watch": {
+      "flutterName": "lightWatch",
+      "type": "color",
+      "value": "#9a7b00",
+      "argb": "0xFF9A7B00",
+      "rationale": "Double extension: the amber WATCH colour is itself absent from WattVision (see extensions.--watch), and #FFD60A is illegible on a light surface, so the light appearance uses a dark amber.",
+      "consumedBy": "Light appearance WATCH Status pill and banner"
+    },
+    "--idle": {
+      "flutterName": "lightIdle",
+      "type": "color",
+      "value": "#8e9299",
+      "argb": "0xFF8E9299",
+      "rationale": "As extensions.--idle, adjusted so the IDLE neutral still reads as inactive against a light surface.",
+      "consumedBy": "Light appearance IDLE Status pill, disconnected link chip, disabled controls"
+    },
+    "--alert-fill": {
+      "flutterName": "lightAlertBoxFill",
+      "type": "color",
+      "value": "#fce8e6",
+      "argb": "0xFFFCE8E6",
+      "rationale": "The §3 alert box fill #3A1C1C is a darkened tint of the alert red; on a light surface the same recipe produces a lightened tint instead.",
+      "consumedBy": "Light appearance alert box background, LEAK and FAULT Alert_Entry rows"
+    },
+    "--watch-fill": {
+      "flutterName": "lightWatchBoxFill",
+      "type": "color",
+      "value": "#fbf3d9",
+      "argb": "0xFFFBF3D9",
+      "rationale": "As --alert-fill, applied to the amber Token_Extension.",
+      "consumedBy": "Light appearance WATCH banner background, WATCH Alert_Entry rows"
+    },
+    "--normal-fill": {
+      "flutterName": "lightNormalBoxFill",
+      "type": "color",
+      "value": "#d8f5df",
+      "argb": "0xFFD8F5DF",
+      "rationale": "As --alert-fill, applied to the secondary accent.",
+      "consumedBy": "Light appearance OK banner background, OK Alert_Entry rows",
+      "note": "Retuned by task 3.2 from #e6f5e9, which was the one light box fill the Requirement 9.8 pastel rule still rejected after the near-neutral carve-out: HSL lightness 0.931 with saturation 0.429, above the neutral threshold and below the pastel saturation floor. Its two siblings were already strongly saturated — --alert-fill at 0.786 and --watch-fill at 0.810 — so the green was the washed-out odd one out rather than a case the rule got wrong. #d8f5df holds the same hue at lightness 0.904 and saturation 0.592, which clears the 0.5 floor on the saturation threshold itself and not by carve-out. The Mobile_Client's lightNormalBoxFill carries the same value (Requirements 13.1, 13.2).",
+      "measured": "Text on the retuned fill: --text-primary 16.10:1, --text-secondary 5.51:1, --accent-text 4.98:1, all clearing the Requirement 11.1 4.5:1 threshold. The OK status colour --normal reads 3.63:1 on it, which meets the 3:1 headline threshold of Requirement 11.2 and was already below 4.5:1 at the previous value (3.74:1), so the retune does not change which criterion that pair satisfies."
+    },
+    "--on-accent": {
+      "flutterName": "lightOnAccent",
+      "type": "color",
+      "value": "#ffffff",
+      "argb": "0xFFFFFFFF",
+      "rationale": "As extensions.--on-accent, inverted: the darkened light accent needs a white foreground to pass contrast.",
+      "consumedBy": "Light appearance label and icon colour inside filled accent buttons and chips"
+    },
+    "--shadow": {
+      "flutterName": "lightShadow",
+      "type": "shadow",
+      "value": "0 12px 30px rgba(18, 18, 18, 0.10)",
+      "rationale": "As extensions.--shadow, at a lower opacity because a light surface shows shadow more readily.",
+      "consumedBy": "Light appearance dialogs, the Diagnostics_Sheet, dropdown surfaces"
+    }
+  },
+
+  "pastelRule": {
+    "requirement": "9.8",
+    "wattVisionSection": "§6 — no pastel colours, no white backgrounds",
+    "definition": "A colour is pastel when its HSL lightness exceeds 0.8 and its HSL saturation falls below 0.5. Near-neutral colours — HSL saturation at or below 0.2 — are excluded from the rule, and achromatic colours are the strict subset of those with saturation exactly 0.",
+    "lightnessAbove": 0.8,
+    "saturationBelow": 0.5,
+    "predicate": "isPastel(c) = !isNeutral(c) && hslLightness(c) > 0.8 && hslSaturation(c) < 0.5",
+    "invariant": "!isPastel(c) for every colour in every appearance's palette",
+    "hsl": {
+      "lightness": "(max + min) / 2, over channels normalised to [0, 1]",
+      "saturation": "max == min ? 0 : (max - min) / (lightness > 0.5 ? (2 - max - min) : (max + min))",
+      "note": "Standard HSL, not HSV. Both are computed from the raw sRGB channels without gamma linearisation; linearisation belongs to the contrast helper, not here."
+    },
+    "achromatic": {
+      "definition": "A colour is achromatic when its HSL saturation is 0, i.e. its three channels are equal.",
+      "saturationAtMost": 0.0,
+      "excludedExamples": ["#ffffff", "#000000"],
+      "reason": "Pure white has lightness 1.0 and saturation 0 and would otherwise be flagged as pastel, which would make the rule reject the §2 primary text colour. Greys carry no hue and so cannot be pastel.",
+      "relationToNeutral": "A distinct, stricter fact than neutral, and kept as its own predicate. Achromatic means provably hueless; neutral means too faintly hued to be called a pastel. Every achromatic colour is neutral; the converse does not hold."
+    },
+    "neutral": {
+      "definition": "A colour is neutral when its HSL saturation is at or below 0.2, whether or not its three channels are exactly equal.",
+      "saturationAtMost": 0.2,
+      "excludedExamples": ["#f4f5f7", "#eceef1", "#d9dde3"],
+      "reason": "A pastel is a pale tint of a colour you can name. A grey carrying a faint cast — an off-white page background a couple of points away from #fcfcfc, a hairline mixed a shade cool — is not a pastel in any ordinary sense, it is a grey. The achromatic exclusion at saturation exactly 0 is too literal to express that: a background of #f4f5f7 is saturation 0.158 and would be flagged, while #f5f5f5 at saturation 0 would not, on a difference of two blue points that no user can see. Raising the exclusion to 0.2 draws the line where the perceptual one actually is.",
+      "decidedBy": "the user, during task 3.2, choosing a near-neutral carve-out over the alternatives of retuning the four flagged values or loosening the pastel thresholds themselves",
+      "rationale": "WattVision §6 forbids pastels and never defines them, so any predicate is a judgement call. The judgement recorded here is that faint-cast greys are not pastels. It is expressed as one number in one place so it can be argued with and retuned without touching either client's palette, and it deliberately leaves the lightness > 0.8 and saturation < 0.5 thresholds exactly as they were — the carve-out narrows what the rule is about, it does not weaken what the rule demands of a genuinely tinted colour.",
+      "boundary": "0.2 sits well clear of both sides of the real data. The three light near-neutrals it excludes measure 0.158, 0.152 and 0.152; the lowest-saturation value the rule still judges is --normal-fill at 0.592. Nothing in either client's palette falls between 0.2 and 0.5, so the threshold is not finely balanced against any shipped value."
+    },
+    "thresholdProvenance": "WattVision §6 forbids pastels without defining them. Undefined, the criterion is unverifiable, so the thresholds are recorded here as the single explicit definition both clients test against. Three numbers carry the definition: lightnessAbove and saturationBelow bound the pastel region, and neutral.saturationAtMost carves out the faint-cast greys that are not pastels at all. All three are judgement calls rather than WattVision values, and all three are tuned here and nowhere else — the compliance suites read them from this file rather than restating them. The neutral threshold was added in task 3.2 by an explicit user decision; see neutral.decidedBy and neutral.rationale.",
+    "consumedBy": "Property 20 in both compliance suites (flutter_app/test/compliance/, react_app/src/__tests__/compliance/)",
+    "knownLiteralRuleHits": {
+      "note": "Empty, and deliberately kept as a field rather than deleted so the history is legible. Task 1.7 recorded four near-neutral hits in the shipped light palette: --bg #f4f5f7 (saturation 0.158), --surface-raised #eceef1 (0.152), --border #d9dde3 (0.152) and --normal-fill #e6f5e9 (0.429). Task 3.2 cleared all four, by two different means. The first three are greys with a faint cast and are now excluded by the neutral carve-out above, which is a change to what the rule is about. The fourth was genuinely a pale, weakly saturated green — saturation 0.429 is far above the carve-out — and so was retuned to #d8f5df at saturation 0.592, which is a change to the palette. Distinguishing the two cases is the whole content of the resolution: three values were misjudged by the predicate, one was correctly judged by it.",
+      "values": [],
+      "appearance": "light",
+      "clearedBy": "task 3.2"
+    }
+  }
+}

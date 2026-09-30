@@ -1,0 +1,34 @@
+{
+  "$comment": "Cross-client parity fixture (Requirement 13.2, design Property 30). One scenario per file. This case: a confirmed slow LEAK, Spanish locale, canonical L/min + litres units. SCHEMA: `settings` is the AppSettings subset that drives derivation and formatting (flowUnit/volumeUnit are the enum wire tokens 'lpm'|'lph'|'lps'|'usgpm'|'ukgpm'|'m3h' and 'l'|'m3'|'usgal'|'ukgal'; tariffBsPerCubicMetre is Bs. per m3; locale is 'es'|'en'; sensorNames labels channels 0..2). `lines` are REAL protocol lines fed to LeakProtocol.parse; the LAST Telemetry ('D,...') line determines the live readings and Status. Telemetry field order is D,seq,uptime,f1,f2,f3,v1,v2,v3,balance,expected,threshold,status,breachStreak,faultStreak. `windowStats` are pre-built per-window aggregates (day/threeDay/week) so no database is needed: averageLpm feeds the average flow strings and totalLitres feeds the total-volume + Bs strings. `expected` is FLAT and STRING-VALUED — the oracle both the Flutter (17.2) and JS (17.3) parity tests assert equality against. status is LeakStatus.wire. liveFlow[i] is UnitFormatter.flow(flowLpm[i]) (note: flow/volume display strings are NOT locale-formatted — Dart toStringAsFixed always uses '.'). <window>Average is UnitFormatter.flow(averageLpm); <window>Total is UnitFormatter.volume(totalLitres); <window>Cost is CostFormatter.format(totalLitres) = 'Bs. ' + locale-formatted litres/1000*tariff at 2 decimals (es uses ',' decimal + '.' grouping). All strings were derived by running the real Flutter UnitFormatter/CostFormatter/LeakStatus, not hand-computed.",
+  "name": "slow-leak-es",
+  "settings": {
+    "flowUnit": "lpm",
+    "volumeUnit": "l",
+    "tariffBsPerCubicMetre": 5.0,
+    "locale": "es",
+    "sensorNames": ["Main Inlet", "Outlet A", "Outlet B"]
+  },
+  "lines": [
+    "D,101,600000,12.34,5.10,4.20,1200.5,480.25,360.75,3.04,0.02,0.50,LEAK,6,0"
+  ],
+  "windowStats": {
+    "day": { "averageLpm": 8.5, "totalLitres": 12240.0 },
+    "threeDay": { "averageLpm": 7.25, "totalLitres": 31320.0 },
+    "week": { "averageLpm": 6.0, "totalLitres": 60480.0 }
+  },
+  "expected": {
+    "status": "LEAK",
+    "liveFlow0": "12.34 L/min",
+    "liveFlow1": "5.10 L/min",
+    "liveFlow2": "4.20 L/min",
+    "dayAverage": "8.50 L/min",
+    "dayTotal": "12240.0 L",
+    "dayCost": "Bs. 61,20",
+    "threeDayAverage": "7.25 L/min",
+    "threeDayTotal": "31320.0 L",
+    "threeDayCost": "Bs. 156,60",
+    "weekAverage": "6.00 L/min",
+    "weekTotal": "60480.0 L",
+    "weekCost": "Bs. 302,40"
+  }
+}

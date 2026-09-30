@@ -1,0 +1,31 @@
+{
+  // Standalone project for the compliance suite. Deliberately NOT referenced
+  // from tsconfig.json, so `tsc --build` (and therefore `npm run build`) never
+  // sees test code. Run it with `npm run typecheck:test`.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    // `node` for the fixture-reading tests that use node:fs, `web-bluetooth`
+    // and `vite/client` so test files can import app sources unchanged.
+    "types": ["node", "web-bluetooth", "vite/client"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "exactOptionalPropertyTypes": false,
+
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+
+    "noEmit": true
+  },
+  "include": ["src/__tests__", "vitest.config.ts"]
+}

@@ -1,0 +1,34 @@
+{
+  "$comment": "Cross-client parity fixture (Requirement 13.2, design Property 30). An IDLE system: no flow on any channel, zero volume, zero cost. English locale, canonical units. Confirms both clients agree on the zero/idle edge — Status IDLE, '0.00 L/min' live readings, '0.0 L' totals, and 'Bs. 0.00' (the CostFormatter '-0.00' guard is exercised implicitly). See slow-leak-es.json for the full SCHEMA description. All strings derived by running the real Flutter formatters.",
+  "name": "idle",
+  "settings": {
+    "flowUnit": "lpm",
+    "volumeUnit": "l",
+    "tariffBsPerCubicMetre": 5.0,
+    "locale": "en",
+    "sensorNames": ["Main Inlet", "Outlet A", "Outlet B"]
+  },
+  "lines": [
+    "D,42,30000,0.00,0.00,0.00,0.0,0.0,0.0,0.00,0.00,0.50,IDLE,0,0"
+  ],
+  "windowStats": {
+    "day": { "averageLpm": 0.0, "totalLitres": 0.0 },
+    "threeDay": { "averageLpm": 0.0, "totalLitres": 0.0 },
+    "week": { "averageLpm": 0.0, "totalLitres": 0.0 }
+  },
+  "expected": {
+    "status": "IDLE",
+    "liveFlow0": "0.00 L/min",
+    "liveFlow1": "0.00 L/min",
+    "liveFlow2": "0.00 L/min",
+    "dayAverage": "0.00 L/min",
+    "dayTotal": "0.0 L",
+    "dayCost": "Bs. 0.00",
+    "threeDayAverage": "0.00 L/min",
+    "threeDayTotal": "0.0 L",
+    "threeDayCost": "Bs. 0.00",
+    "weekAverage": "0.00 L/min",
+    "weekTotal": "0.0 L",
+    "weekCost": "Bs. 0.00"
+  }
+}

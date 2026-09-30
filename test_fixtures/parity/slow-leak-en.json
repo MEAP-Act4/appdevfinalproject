@@ -1,0 +1,34 @@
+{
+  "$comment": "Cross-client parity fixture (Requirement 13.2, design Property 30). Same telemetry and windowStats as slow-leak-es, but English locale. This is the deliberate pair: the flow/volume display strings are byte-identical to the es case (UnitFormatter does not localise the decimal separator), while the Bs strings differ ('.' decimal in en vs ',' in es) — so the pair catches locale divergence in the cost path specifically. See slow-leak-es.json for the full SCHEMA description. All strings derived by running the real Flutter formatters.",
+  "name": "slow-leak-en",
+  "settings": {
+    "flowUnit": "lpm",
+    "volumeUnit": "l",
+    "tariffBsPerCubicMetre": 5.0,
+    "locale": "en",
+    "sensorNames": ["Main Inlet", "Outlet A", "Outlet B"]
+  },
+  "lines": [
+    "D,101,600000,12.34,5.10,4.20,1200.5,480.25,360.75,3.04,0.02,0.50,LEAK,6,0"
+  ],
+  "windowStats": {
+    "day": { "averageLpm": 8.5, "totalLitres": 12240.0 },
+    "threeDay": { "averageLpm": 7.25, "totalLitres": 31320.0 },
+    "week": { "averageLpm": 6.0, "totalLitres": 60480.0 }
+  },
+  "expected": {
+    "status": "LEAK",
+    "liveFlow0": "12.34 L/min",
+    "liveFlow1": "5.10 L/min",
+    "liveFlow2": "4.20 L/min",
+    "dayAverage": "8.50 L/min",
+    "dayTotal": "12240.0 L",
+    "dayCost": "Bs. 61.20",
+    "threeDayAverage": "7.25 L/min",
+    "threeDayTotal": "31320.0 L",
+    "threeDayCost": "Bs. 156.60",
+    "weekAverage": "6.00 L/min",
+    "weekTotal": "60480.0 L",
+    "weekCost": "Bs. 302.40"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "leakguard-react",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "React test client for the LeakGuard Arduino leak monitor. Mirrors the Flutter app's behaviour over Web Bluetooth.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --build && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "typecheck:test": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/web-bluetooth": "0.0.21",
+    "@vitejs/plugin-react": "6.1.1",
+    "fast-check": "4.10.2",
+    "jsdom": "30.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
+  }
+}

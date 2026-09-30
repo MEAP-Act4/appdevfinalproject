@@ -1,0 +1,36 @@
+{
+  "$comment": "Cross-client parity fixture (Requirement 13.2, design Property 30). A calibration run (Status CAL), Spanish locale, and DELIBERATELY non-default display units (US gallons/min for flow, cubic metres for volume) so the fixture exercises UnitFormatter's conversion path — not just the identity L/min + litres case. The `lines` sequence is multi-packet: an 'H' handshake, a 'C,RUN' calibration-progress line, then the 'D' telemetry line the derivation reads; both parsers must skip the non-telemetry packets and pick the last Telemetry. Live: 3.50 L/min -> 0.92 gal/min (2 dp), 1.70 -> 0.45. Total: 5040 L -> 5.040 m3 (3 dp). Cost is independent of the display volume unit (CostFormatter takes canonical litres): 5040 L /1000 *7.5 = 37.80 Bs, es-formatted 'Bs. 37,80'. See slow-leak-es.json for the full SCHEMA description. All strings derived by running the real Flutter formatters.",
+  "name": "calibration",
+  "settings": {
+    "flowUnit": "usgpm",
+    "volumeUnit": "m3",
+    "tariffBsPerCubicMetre": 7.5,
+    "locale": "es",
+    "sensorNames": ["Main Inlet", "Outlet A", "Outlet B"]
+  },
+  "lines": [
+    "H,2.1.0,2,3,1000,450.0,450.0,450.0,0.30,0.05,0.08,0.20,6,10,5,0.12",
+    "C,RUN,45,120,0.014",
+    "D,7,15000,3.50,1.70,1.70,52.5,25.5,25.5,0.10,0.02,0.50,CAL,0,0"
+  ],
+  "windowStats": {
+    "day": { "averageLpm": 3.5, "totalLitres": 5040.0 },
+    "threeDay": { "averageLpm": 3.5, "totalLitres": 5040.0 },
+    "week": { "averageLpm": 3.5, "totalLitres": 5040.0 }
+  },
+  "expected": {
+    "status": "CAL",
+    "liveFlow0": "0.92 gal/min",
+    "liveFlow1": "0.45 gal/min",
+    "liveFlow2": "0.45 gal/min",
+    "dayAverage": "0.92 gal/min",
+    "dayTotal": "5.040 m³",
+    "dayCost": "Bs. 37,80",
+    "threeDayAverage": "0.92 gal/min",
+    "threeDayTotal": "5.040 m³",
+    "threeDayCost": "Bs. 37,80",
+    "weekAverage": "0.92 gal/min",
+    "weekTotal": "5.040 m³",
+    "weekCost": "Bs. 37,80"
+  }
+}
