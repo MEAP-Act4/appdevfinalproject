@@ -1,0 +1,64 @@
+name: Build Android APK
+
+# Builds the LeakGuard Flutter app on GitHub's servers and publishes the APK
+# as a downloadable artifact. Lets you get the app onto a phone without a local
+# Android build (no NDK/Gradle downloads or disk usage on your own machine).
+#
+# Trigger it manually from the repo's Actions tab ("Run workflow"), or it runs
+# automatically on a push to master that touches the Flutter app.
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [master]
+    paths:
+      - "flutter_app/**"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Fetch dependencies
+        run: flutter pub get
+
+      # Regenerate the Android host project. The repo intentionally does not
+      # commit flutter_app/android (it is generated), so recreate it here.
+      - name: Ensure Android platform
+        run: flutter create . --platforms=android --project-name leakguard
+
+      - name: Build release APKs (split per ABI)
+        run: flutter build apk --release --split-per-abi
+
+      # Also build a universal APK as a fallback that installs on any device.
+      - name: Build universal release APK
+        run: flutter build apk --release
+
+      - name: Upload split APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: leakguard-apks
+          path: flutter_app/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
