@@ -47,10 +47,15 @@ jobs:
       - name: Ensure Android platform
         run: flutter create . --platforms=android --project-name leakguard
 
-      # Resolve dependencies against the committed pubspec.lock EXACTLY. Without
-      # --enforce-lockfile the runner floated shared_preferences_android to a
-      # newer native version than the Dart side expected, which crashed the
-      # release app at startup (NoSuchMethodError: getAll -> white screen).
+      # `flutter create` above runs its own pub get and REWRITES pubspec.lock
+      # with floated versions. Restore our committed lock so the build uses the
+      # exact plugin versions verified locally. Without this, the runner floated
+      # shared_preferences_android to a newer native version than the Dart side
+      # expected, crashing the release app at startup
+      # (NoSuchMethodError: getAll -> white screen).
+      - name: Restore committed lockfile
+        run: git checkout -- pubspec.lock
+
       - name: Fetch dependencies (locked)
         run: flutter pub get --enforce-lockfile
 

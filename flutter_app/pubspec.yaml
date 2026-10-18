@@ -19,8 +19,11 @@ dependencies:
   path: 1.9.1
   path_provider: 2.1.6
 
-  # Settings persistence.
-  shared_preferences: 2.5.5
+  # Settings persistence. Pinned to 2.3.2: the 2.5.x line ships a coroutine-based
+  # getAll() in shared_preferences_android that crashed the release build at
+  # startup (NoSuchMethodError: getAll -> white screen) under this AGP/Flutter
+  # toolchain. 2.3.2 predates that API and is stable here.
+  shared_preferences: 2.3.2
 
   # State management.
   provider: 6.1.5+1
@@ -30,6 +33,13 @@ dependencies:
 
   # Date/number formatting.
   intl: 0.20.3
+
+# Force the Android implementation of shared_preferences to a pre-coroutine
+# release. Left to float it resolves to 2.5.0, whose coroutine-based getAll()
+# is not present at runtime under this toolchain and crashes the release app
+# on startup (NoSuchMethodError: getAll -> white screen).
+dependency_overrides:
+  shared_preferences_android: 2.3.4
 
 dev_dependencies:
   flutter_test:
