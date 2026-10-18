@@ -467,6 +467,13 @@ class _EnvelopePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Nothing sensible to draw in a degenerate box, and painting anyway throws:
+    // the marker clamp below needs upper >= lower, which fails once the width
+    // drops below ~12px (e.g. during a layout/collapse transition while live
+    // data is repainting). Bailing here was the fix for a paint-time crash loop
+    // that made the whole screen flicker while connected.
+    if (size.width <= 0 || size.height <= 0) return;
+
     final centreY = size.height / 2;
     final trackHeight = 10.0;
     final trackRect = RRect.fromRectAndRadius(
@@ -519,9 +526,11 @@ class _EnvelopePainter extends CustomPainter {
         ..strokeWidth = 1.5,
     );
 
-    // Marker.
+    // Marker. The inset can never exceed half the width, otherwise the clamp
+    // bounds invert (lower > upper) and double.clamp throws "Invalid argument".
+    final markerInset = (6.0).clamp(0.0, size.width / 2);
     final markerX = (size.width / 2 + (ratio / 2) * size.width / 2)
-        .clamp(6.0, size.width - 6.0);
+        .clamp(markerInset, size.width - markerInset);
     canvas
       ..drawCircle(
         Offset(markerX, centreY),
