@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
@@ -29,7 +32,15 @@ Future<void> main() async {
   final priorOnError = FlutterError.onError;
   FlutterError.onError = (details) {
     _fatalError.value = details;
+    _persistError(details.exceptionAsString(), details.stack);
     priorOnError?.call(details);
+  };
+
+  // Catches errors the zone misses (engine/platform-dispatched).
+  PlatformDispatcher.instance.onError = (error, stack) {
+    _fatalError.value = FlutterErrorDetails(exception: error, stack: stack);
+    _persistError('$error', stack);
+    return true;
   };
 
   // Everything runs inside a guarded zone so async errors surface too.
@@ -37,10 +48,29 @@ Future<void> main() async {
     () async => _bootstrap(),
     (error, stack) {
       _fatalError.value = FlutterErrorDetails(exception: error, stack: stack);
+      _persistError('$error', stack);
       // Keep an app on screen showing the error rather than a dead process.
       runApp(_FatalErrorApp(listenable: _fatalError));
     },
   ));
+}
+
+/// Appends a captured error to a file in external storage so it can be pulled
+/// off-device with adb, since this ROM suppresses Flutter's logcat output.
+/// Path: /storage/emulated/0/Android/data/com.example.leakguard/files/leakguard_errors.log
+Future<void> _persistError(String message, StackTrace? stack) async {
+  try {
+    final dir = await getExternalStorageDirectory();
+    if (dir == null) return;
+    final file = File('${dir.path}/leakguard_errors.log');
+    await file.writeAsString(
+      '--- ${DateTime.now().toIso8601String()} ---\n$message\n${stack ?? ''}\n\n',
+      mode: FileMode.append,
+      flush: true,
+    );
+  } on Object {
+    // Never let the error logger itself throw.
+  }
 }
 
 Future<void> _bootstrap() async {
