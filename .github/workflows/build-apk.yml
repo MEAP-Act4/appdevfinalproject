@@ -79,9 +79,22 @@ jobs:
       - name: Build universal release APK
         run: flutter build apk --release
 
-      - name: Upload split APKs
+      # Profile build: keeps Dart assertions and prints full stack traces to
+      # logcat (tag "flutter"), unlike release which strips them. Used to
+      # diagnose runtime crashes we cannot see in a release build.
+      - name: Build profile APK (arm64, for crash diagnosis)
+        run: flutter build apk --profile --target-platform android-arm64
+
+      - name: Upload release APKs
         uses: actions/upload-artifact@v4
         with:
           name: leakguard-apks
-          path: flutter_app/build/app/outputs/flutter-apk/*.apk
+          path: flutter_app/build/app/outputs/flutter-apk/*release*.apk
+          if-no-files-found: error
+
+      - name: Upload profile APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: leakguard-profile
+          path: flutter_app/build/app/outputs/flutter-apk/*profile*.apk
           if-no-files-found: error
