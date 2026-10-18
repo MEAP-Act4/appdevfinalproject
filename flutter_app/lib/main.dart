@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
 import 'package:provider/provider.dart';
@@ -10,7 +13,37 @@ import 'state/alerts_controller.dart';
 import 'state/monitor_controller.dart';
 import 'state/selection_controller.dart';
 
+/// The most recent uncaught error, shown full-screen by [_ErrorScreen]. Release
+/// builds strip Dart stack traces from logcat, so without this an exception is
+/// an invisible white screen. Capturing it here makes any crash self-reporting
+/// on the device itself.
+final ValueNotifier<FlutterErrorDetails?> _fatalError =
+    ValueNotifier<FlutterErrorDetails?>(null);
+
 Future<void> main() async {
+  // Any build-phase exception renders its message + stack on screen instead of
+  // the default grey/white crash box, so a release build still shows the cause.
+  ErrorWidget.builder = (details) => _ErrorScreen(details: details);
+
+  // Framework errors (most widget build failures) land here.
+  final priorOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    _fatalError.value = details;
+    priorOnError?.call(details);
+  };
+
+  // Everything runs inside a guarded zone so async errors surface too.
+  unawaited(runZonedGuarded<Future<void>>(
+    () async => _bootstrap(),
+    (error, stack) {
+      _fatalError.value = FlutterErrorDetails(exception: error, stack: stack);
+      // Keep an app on screen showing the error rather than a dead process.
+      runApp(_FatalErrorApp(listenable: _fatalError));
+    },
+  ));
+}
+
+Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Both of these touch platform channels, so they must happen after the binding
@@ -57,4 +90,67 @@ Future<void> main() async {
       child: const LeakGuardApp(),
     ),
   );
+}
+
+/// Minimal app shown when startup itself (outside the widget tree) throws.
+class _FatalErrorApp extends StatelessWidget {
+  const _FatalErrorApp({required this.listenable});
+
+  final ValueListenable<FlutterErrorDetails?> listenable;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ValueListenableBuilder<FlutterErrorDetails?>(
+        valueListenable: listenable,
+        builder: (_, details, _) =>
+            _ErrorScreen(details: details ?? FlutterErrorDetails(exception: 'unknown')),
+      ),
+    );
+  }
+}
+
+/// Full-screen, scrollable, copyable crash report. Replaces the default crash
+/// box so the exact exception and stack are visible on the device.
+class _ErrorScreen extends StatelessWidget {
+  const _ErrorScreen({required this.details});
+
+  final FlutterErrorDetails details;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = '${details.exceptionAsString()}\n\n${details.stack ?? ''}';
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Container(
+        color: const Color(0xFF1A0000),
+        padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                'LeakGuard hit an error',
+                style: TextStyle(
+                  color: Color(0xFFFF6B6B),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SelectableText(
+                text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
