@@ -46,7 +46,10 @@ class AppDatabase {
       },
       onOpen: (db) async {
         // WAL keeps the 1 Hz writer from blocking the UI's reads.
-        await db.execute('PRAGMA journal_mode = WAL');
+        // `PRAGMA journal_mode = WAL` returns the resulting mode as a row, so it
+        // must go through rawQuery; sqflite rejects value-returning statements
+        // passed to execute() ("Queries can be performed using ... rawQuery").
+        await db.rawQuery('PRAGMA journal_mode = WAL');
         await db.execute('PRAGMA synchronous = NORMAL');
       },
     );
