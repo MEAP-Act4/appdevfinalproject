@@ -56,6 +56,39 @@ jobs:
       - name: Restore committed lockfile
         run: git checkout -- pubspec.lock
 
+      # `flutter create` generates a default AndroidManifest with NO Bluetooth
+      # permissions, so BLE scan/connect fails instantly ("could not connect").
+      # Inject the permissions from PLATFORM_SETUP.md right after the <manifest>
+      # tag. The android/ dir is regenerated each build, so this must run in CI.
+      - name: Inject Bluetooth permissions into AndroidManifest
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          python3 - "$MANIFEST" <<'PY'
+          import sys, re
+          path = sys.argv[1]
+          with open(path, encoding="utf-8") as f:
+              xml = f.read()
+          perms = '''
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+              <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+              <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+          '''
+          if "BLUETOOTH_SCAN" not in xml:
+              xml = re.sub(r"(<manifest\b[^>]*>)", r"\1" + perms, xml, count=1)
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(xml)
+              print("Injected Bluetooth permissions.")
+          else:
+              print("Permissions already present.")
+          print("--- permission lines ---")
+          for line in xml.splitlines():
+              if "uses-permission" in line or "uses-feature" in line:
+                  print(line.strip())
+          PY
+
       - name: Fetch dependencies (locked)
         run: flutter pub get --enforce-lockfile
 
