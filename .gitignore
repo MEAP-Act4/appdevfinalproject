@@ -11,7 +11,9 @@ build/
 *.iml
 .flutter-plugins
 .flutter-plugins-dependencies
-pubspec.lock
+# pubspec.lock is intentionally committed: the cloud APK build must resolve the
+# exact same plugin versions verified locally (e.g. shared_preferences_android
+# 2.5.0). Letting it float broke the release build with a NoSuchMethodError.
 
 # Generated native host projects (recreate with `flutter create .`)
 flutter_app/android/
