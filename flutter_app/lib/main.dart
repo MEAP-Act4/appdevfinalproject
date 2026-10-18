@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/locale/app_locale.dart';
+import 'core/theme/design_tokens.dart';
 import 'data/db/app_database.dart';
 import 'data/settings/settings_controller.dart';
 import 'state/alerts_controller.dart';
@@ -151,10 +152,13 @@ class _ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = '${details.exceptionAsString()}\n\n${details.stack ?? ''}';
+    // Colours come from the Design_Token_Registry rather than literals so this
+    // screen stays inside the no-literal-colour rule even though it must render
+    // without a theme. The alert-box fill and alert accent are the crash family.
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
-        color: const Color(0xFF1A0000),
+        color: Tokens.alertBoxFill,
         padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
         child: SingleChildScrollView(
           child: Column(
@@ -163,7 +167,7 @@ class _ErrorScreen extends StatelessWidget {
               const Text(
                 'LeakGuard hit an error',
                 style: TextStyle(
-                  color: Color(0xFFFF6B6B),
+                  color: Tokens.alert,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -172,7 +176,7 @@ class _ErrorScreen extends StatelessWidget {
               SelectableText(
                 text,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Tokens.darkTextPrimary,
                   fontSize: 12,
                   fontFamily: 'monospace',
                 ),

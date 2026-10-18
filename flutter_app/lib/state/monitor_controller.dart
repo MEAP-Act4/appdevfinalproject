@@ -72,6 +72,15 @@ class MonitorController extends ChangeNotifier {
   bool _aggregatesInFlight = false;
   AggregateSnapshot _aggregates = AggregateSnapshot.empty();
 
+  // --- Telemetry UI rate limiting -------------------------------------------
+  // The board emits ~1 Hz, but a reconnecting or chatty BLE link can deliver a
+  // burst of buffered lines at once. Coalesce UI rebuilds to at most one per
+  // [_uiThrottle] so a burst cannot thrash the widget tree; the newest sample
+  // is always kept and a trailing timer guarantees the last one is painted.
+  static const Duration _uiThrottle = Duration(milliseconds: 250);
+  DateTime? _lastUiNotifyAt;
+  Timer? _trailingNotifyTimer;
+
   // --- Alarm bookkeeping ----------------------------------------------------
   LeakStatus _lastStatus = LeakStatus.unknown;
   DateTime? _lastTelemetryAt;
@@ -88,7 +97,14 @@ class MonitorController extends ChangeNotifier {
   // ===========================================================================
 
   LinkState get linkState => _linkState;
-  bool get isConnected => _linkState.grantsAccess && !_stale;
+  /// The connection indicator follows the BLE link lifecycle, NOT telemetry
+  /// freshness. A brief gap in telemetry (a BLE hiccup, the board pausing) used
+  /// to flip this false and back true within a second, so the UI flickered
+  /// between connected and disconnected. Staleness is now a separate, softer
+  /// signal ([isStale]): the link stays "connected" until the GATT link is
+  /// genuinely lost (the transport moves to reconnecting/idle), and a quiet feed
+  /// is surfaced as "no fresh data" rather than as a disconnect.
+  bool get isConnected => _linkState.grantsAccess;
   bool get usingSimulator => _usingSimulator;
   String? get lastError => _lastError;
   List<DiscoveredDevice> get discovered => _discovered;
@@ -189,6 +205,7 @@ class MonitorController extends ChangeNotifier {
     _aggregateTimer?.cancel();
     _staleTimer?.cancel();
     _reconnectTimer?.cancel();
+    _trailingNotifyTimer?.cancel();
     _lineSub?.cancel();
     _stateSub?.cancel();
     _diagSub?.cancel();
@@ -447,10 +464,41 @@ class MonitorController extends ChangeNotifier {
       _liveWindow.removeFirst();
     }
 
+    final statusBefore = _lastStatus;
     _handleStatusTransition(telemetry);
     _accumulate(telemetry);
 
+    // An alarm-relevant status change is painted immediately; routine samples
+    // are rate-limited so a burst of buffered lines cannot thrash the UI.
+    final statusChanged = telemetry.status != statusBefore;
+    if (statusChanged) {
+      _notifyNow();
+    } else {
+      _notifyThrottled();
+    }
+  }
+
+  /// Emit a UI notification now and reset the throttle window.
+  void _notifyNow() {
+    _trailingNotifyTimer?.cancel();
+    _trailingNotifyTimer = null;
+    _lastUiNotifyAt = DateTime.now();
     notifyListeners();
+  }
+
+  /// Emit at most one UI notification per [_uiThrottle]. If called again inside
+  /// the window, schedule a single trailing notification so the latest sample
+  /// is never dropped.
+  void _notifyThrottled() {
+    final now = DateTime.now();
+    final last = _lastUiNotifyAt;
+    if (last == null || now.difference(last) >= _uiThrottle) {
+      _notifyNow();
+      return;
+    }
+    if (_trailingNotifyTimer?.isActive ?? false) return;
+    final wait = _uiThrottle - now.difference(last);
+    _trailingNotifyTimer = Timer(wait, _notifyNow);
   }
 
   void _pushRaw(String line) {
@@ -544,18 +592,32 @@ class MonitorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// How long telemetry must be silent before the feed is flagged "quiet".
+  /// Deliberately longer than [Hm10Transport.staleAfter] (the transport's own
+  /// idea of a gap) so a one- or two-second BLE hiccup never trips it. This only
+  /// toggles the soft [isStale] note now — it no longer affects [isConnected] —
+  /// so a longer, calmer threshold removes the connected/disconnected flicker.
+  static const Duration _staleAfter = Duration(seconds: 12);
+
   void _checkStaleness() {
-    if (!_linkState.grantsAccess) return;
+    if (!_linkState.grantsAccess) {
+      // Not on a live link: clear any lingering stale flag quietly.
+      if (_stale) {
+        _stale = false;
+        notifyListeners();
+      }
+      return;
+    }
     final at = _lastTelemetryAt;
     if (at == null) return;
     final gone = DateTime.now().difference(at);
-    final nextStale = gone > Hm10Transport.staleAfter;
+    final nextStale = gone > _staleAfter;
     if (nextStale != _stale) {
       _stale = nextStale;
-      if (_stale) _pushRaw('! No telemetry for ${gone.inSeconds}s');
+      if (_stale) _pushRaw('· Feed quiet — no telemetry for ${gone.inSeconds}s');
       notifyListeners();
     } else if (_stale) {
-      // Keep the "seconds since" counter ticking in the UI.
+      // Keep the "seconds since" counter ticking in the UI while quiet.
       notifyListeners();
     }
   }
