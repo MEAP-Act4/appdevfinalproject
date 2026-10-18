@@ -49,6 +49,19 @@ jobs:
       - name: Ensure Android platform
         run: flutter create . --platforms=android --project-name leakguard
 
+      # The permission_handler plugin requires compileSdk 37, but the generated
+      # project defaults lower. Pin compileSdk (and keep NDK) so the AAR metadata
+      # check passes. The android/ dir is regenerated above, so patch it here.
+      - name: Pin compileSdk to 37
+        run: |
+          GRADLE=android/app/build.gradle.kts
+          echo "--- before ---"
+          grep -n "compileSdk" "$GRADLE" || true
+          # Replace whatever compileSdk is set to (flutter.compileSdkVersion or a literal) with 37.
+          sed -i -E 's/compileSdk(Version)?\s*=\s*.*/compileSdk = 37/' "$GRADLE"
+          echo "--- after ---"
+          grep -n "compileSdk" "$GRADLE" || true
+
       - name: Build release APKs (split per ABI)
         run: flutter build apk --release --split-per-abi
 
