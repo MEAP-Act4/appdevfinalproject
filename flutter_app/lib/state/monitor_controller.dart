@@ -152,8 +152,14 @@ class MonitorController extends ChangeNotifier {
   }
 
   /// The gate's verdict: does the user get the dashboard?
+  ///
+  /// Uses the *held* connection ([_connectionHeld]) rather than the raw link
+  /// state so a momentary HM-10 reconnect blip no longer throws the user back
+  /// to the connection screen mid-session. The hold is set the instant the link
+  /// first reaches ready and only released after the grace window, so the first
+  /// successful connect still opens the gate immediately.
   bool grantsAccess({required bool requireConnection}) {
-    if (_linkState.grantsAccess) return true;
+    if (_connectionHeld || _linkState.grantsAccess) return true;
     if (!requireConnection && _historyOnly) return true;
     return false;
   }

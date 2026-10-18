@@ -293,8 +293,19 @@ class Hm10Transport implements LeakTransport {
 
     try {
       await _connectionSub?.cancel();
+      // `connectionState` replays the CURRENT value on subscribe, which is
+      // `disconnected` here because we have not connected yet. Acting on that
+      // flipped the link straight to `reconnecting` and kicked off a reconnect
+      // race against our own in-flight connect(). Only treat a `disconnected`
+      // as a real drop once we have actually observed `connected` first.
+      var hasConnected = false;
       _connectionSub = device.connectionState.listen((connectionState) {
+        if (connectionState == BluetoothConnectionState.connected) {
+          hasConnected = true;
+          return;
+        }
         if (connectionState == BluetoothConnectionState.disconnected) {
+          if (!hasConnected) return; // spurious pre-connect emission, ignore
           _log('Disconnected: ${device.disconnectReason?.description ?? 'link lost'}');
           _channel = null;
           _connected = null;
