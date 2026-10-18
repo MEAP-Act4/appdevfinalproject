@@ -81,6 +81,17 @@ class MonitorController extends ChangeNotifier {
   DateTime? _lastUiNotifyAt;
   Timer? _trailingNotifyTimer;
 
+  // --- Connection hysteresis -------------------------------------------------
+  // HM-10 modules (especially clones) flap the GATT link: the stack fires brief
+  // disconnect/connect events even while telemetry keeps flowing, which drove
+  // the connection indicator to flicker ready<->reconnecting. Once the link has
+  // reached ready we "hold" it connected and only release after it has stayed
+  // non-ready for [_connectionGrace] continuously, so a momentary blip that
+  // recovers never reaches the UI.
+  static const Duration _connectionGrace = Duration(seconds: 8);
+  bool _connectionHeld = false;
+  Timer? _connectionLostTimer;
+
   // --- Alarm bookkeeping ----------------------------------------------------
   LeakStatus _lastStatus = LeakStatus.unknown;
   DateTime? _lastTelemetryAt;
@@ -97,14 +108,14 @@ class MonitorController extends ChangeNotifier {
   // ===========================================================================
 
   LinkState get linkState => _linkState;
-  /// The connection indicator follows the BLE link lifecycle, NOT telemetry
-  /// freshness. A brief gap in telemetry (a BLE hiccup, the board pausing) used
-  /// to flip this false and back true within a second, so the UI flickered
-  /// between connected and disconnected. Staleness is now a separate, softer
-  /// signal ([isStale]): the link stays "connected" until the GATT link is
-  /// genuinely lost (the transport moves to reconnecting/idle), and a quiet feed
-  /// is surfaced as "no fresh data" rather than as a disconnect.
-  bool get isConnected => _linkState.grantsAccess;
+  /// The connection indicator. Follows a *held* view of the BLE link rather
+  /// than its instantaneous state: once the link reaches ready it stays
+  /// "connected" through brief reconnect flaps (the HM-10 drops and re-attaches
+  /// constantly) and is only released after [_connectionGrace] of continuous
+  /// non-ready time. This, plus decoupling from telemetry freshness, is what
+  /// stops the connected/disconnected flicker. [isStale] remains the soft
+  /// "feed is quiet" signal and never flips this.
+  bool get isConnected => _connectionHeld;
   bool get usingSimulator => _usingSimulator;
   String? get lastError => _lastError;
   List<DiscoveredDevice> get discovered => _discovered;
@@ -206,6 +217,7 @@ class MonitorController extends ChangeNotifier {
     _staleTimer?.cancel();
     _reconnectTimer?.cancel();
     _trailingNotifyTimer?.cancel();
+    _connectionLostTimer?.cancel();
     _lineSub?.cancel();
     _stateSub?.cancel();
     _diagSub?.cancel();
@@ -231,6 +243,10 @@ class MonitorController extends ChangeNotifier {
       if (state == LinkState.idle || state == LinkState.unavailable) {
         _latest = null;
         _stale = false;
+        // A clean idle/unavailable is a real teardown, release the hold now.
+        _releaseConnectionHold();
+      } else {
+        _updateConnectionHold(state);
       }
       notifyListeners();
     });
@@ -348,6 +364,7 @@ class MonitorController extends ChangeNotifier {
     _latest = null;
     _liveWindow.clear();
     _stale = false;
+    _releaseConnectionHold();
     notifyListeners();
   }
 
@@ -620,6 +637,39 @@ class MonitorController extends ChangeNotifier {
       // Keep the "seconds since" counter ticking in the UI while quiet.
       notifyListeners();
     }
+  }
+
+  /// Applies the connection-hold hysteresis for a new link [state].
+  ///
+  /// Reaching ready holds the connection and cancels any pending release. Any
+  /// other non-idle state (connecting, handshaking, reconnecting) starts a
+  /// single grace timer: if the link has not returned to ready by the time it
+  /// fires, the hold is released and the UI finally shows disconnected. A blip
+  /// that recovers to ready cancels the timer, so it never surfaces.
+  void _updateConnectionHold(LinkState state) {
+    if (state == LinkState.ready) {
+      _connectionLostTimer?.cancel();
+      _connectionLostTimer = null;
+      _connectionHeld = true;
+      return;
+    }
+    // Not ready. If we were holding, give it a grace period to recover before
+    // declaring the link lost. If we were never connected, nothing to hold.
+    if (_connectionHeld && (_connectionLostTimer?.isActive != true)) {
+      _connectionLostTimer = Timer(_connectionGrace, () {
+        if (!_linkState.grantsAccess) {
+          _connectionHeld = false;
+          notifyListeners();
+        }
+      });
+    }
+  }
+
+  /// Immediately drops the connection hold (user disconnect or a clean idle).
+  void _releaseConnectionHold() {
+    _connectionLostTimer?.cancel();
+    _connectionLostTimer = null;
+    _connectionHeld = false;
   }
 
   // ===========================================================================
