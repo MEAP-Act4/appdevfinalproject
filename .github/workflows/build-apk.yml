@@ -41,13 +41,18 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
-      - name: Fetch dependencies
-        run: flutter pub get
-
-      # Regenerate the Android host project. The repo intentionally does not
-      # commit flutter_app/android (it is generated), so recreate it here.
+      # Regenerate the Android host project first. The repo intentionally does
+      # not commit flutter_app/android (it is generated), so recreate it here.
+      # Do this BEFORE pub get so it cannot overwrite the committed lockfile.
       - name: Ensure Android platform
         run: flutter create . --platforms=android --project-name leakguard
+
+      # Resolve dependencies against the committed pubspec.lock EXACTLY. Without
+      # --enforce-lockfile the runner floated shared_preferences_android to a
+      # newer native version than the Dart side expected, which crashed the
+      # release app at startup (NoSuchMethodError: getAll -> white screen).
+      - name: Fetch dependencies (locked)
+        run: flutter pub get --enforce-lockfile
 
       # The permission_handler plugin requires compileSdk 37, but the generated
       # project defaults lower. Pin compileSdk (and keep NDK) so the AAR metadata
