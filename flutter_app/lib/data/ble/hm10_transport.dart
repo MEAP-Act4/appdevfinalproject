@@ -55,6 +55,19 @@ class Hm10Transport implements LeakTransport {
   /// Guards against overlapping writes: the HM-10 cannot interleave them.
   Future<void> _writeQueue = Future<void>.value();
 
+  // --- Notify watchdog -------------------------------------------------------
+  // HM-10 clones often keep the GATT link up (LED solid) but silently stop
+  // delivering notifications after a few seconds. We track when data last
+  // arrived and, if it goes quiet on a live link, toggle the notify descriptor
+  // off/on to kick the module back into streaming — all without dropping the
+  // connection.
+  Timer? _notifyWatchdog;
+  DateTime? _lastDataAt;
+  bool _reArming = false;
+
+  /// Quiet period on a live link before we re-arm notifications.
+  static const Duration _notifyQuietAfter = Duration(seconds: 4);
+
   @override
   String get kind => 'BLE';
 
@@ -371,8 +384,28 @@ class Hm10Transport implements LeakTransport {
       _setState(LinkState.handshaking);
 
       // Nudge the board: it sends `H` at boot, but we may have connected later.
-      await send(LeakCommand.hello);
-      await send(LeakCommand.requestBaseline);
+      // These writes are best-effort: an HM-10 clone can drop the link if it is
+      // written to before it has settled, and a write that throws here used to
+      // bubble up and fail the whole connection. Delay briefly to let the link
+      // settle, then fire the nudges without letting a write error tear the
+      // connection down — the board streams telemetry on its own regardless, so
+      // a missed HELLO/BASE? is harmless.
+      unawaited(Future<void>(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 1200));
+        try {
+          await send(LeakCommand.hello);
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+          await send(LeakCommand.requestBaseline);
+        } on Object catch (error) {
+          _log('Initial nudge skipped: $error');
+        }
+      }));
+
+      // Start the notify watchdog: HM-10 clones often keep the GATT link up
+      // (LED stays solid) but silently stop pushing notifications after a few
+      // seconds. The watchdog re-arms the CCCD when the feed goes quiet, which
+      // kicks the module back into streaming without dropping the connection.
+      _startNotifyWatchdog();
     } on TransportFailure {
       _setState(LinkState.failed);
       rethrow;
@@ -415,9 +448,58 @@ class Hm10Transport implements LeakTransport {
   }
 
   void _ingest(List<int> bytes) {
+    _lastDataAt = DateTime.now();
     for (final line in _assembler.addBytes(bytes)) {
       if (line.trim().isEmpty) continue;
       if (!_disposed) _lineController.add(line);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Notify watchdog — recover a silent-but-connected HM-10
+  // ---------------------------------------------------------------------------
+
+  void _startNotifyWatchdog() {
+    _lastDataAt = DateTime.now();
+    _notifyWatchdog?.cancel();
+    _notifyWatchdog = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (_disposed) return;
+      final channel = _channel;
+      if (channel == null) return;
+      final last = _lastDataAt;
+      if (last == null) return;
+      // Only act on a live link that has simply gone quiet.
+      if (DateTime.now().difference(last) >= _notifyQuietAfter) {
+        unawaited(_reArmNotify());
+      }
+    });
+  }
+
+  /// Toggle the notify descriptor off then on to make a silent clone resume
+  /// streaming, without tearing down the GATT link.
+  Future<void> _reArmNotify() async {
+    if (_reArming || _disposed) return;
+    final channel = _channel;
+    if (channel == null) return;
+    if (!(channel.properties.notify || channel.properties.indicate)) return;
+    _reArming = true;
+    try {
+      _log('Feed quiet — re-arming notifications.');
+      await channel.setNotifyValue(false);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await channel.setNotifyValue(true);
+      // A gentle nudge in case the board is waiting for a prompt.
+      try {
+        await _sendNow(LeakCommand.hello);
+      } on Object catch (_) {
+        // Best effort only.
+      }
+      // Reset the clock so we do not hammer the descriptor every tick.
+      _lastDataAt = DateTime.now();
+    } on Object catch (error) {
+      _log('Re-arm failed: $error');
+    } finally {
+      _reArming = false;
     }
   }
 
@@ -467,6 +549,8 @@ class Hm10Transport implements LeakTransport {
 
   @override
   Future<void> disconnect() async {
+    _notifyWatchdog?.cancel();
+    _notifyWatchdog = null;
     await _notifySub?.cancel();
     _notifySub = null;
     await _connectionSub?.cancel();
@@ -486,6 +570,7 @@ class Hm10Transport implements LeakTransport {
   @override
   Future<void> dispose() async {
     _disposed = true;
+    _notifyWatchdog?.cancel();
     await stopScan();
     await _notifySub?.cancel();
     await _connectionSub?.cancel();

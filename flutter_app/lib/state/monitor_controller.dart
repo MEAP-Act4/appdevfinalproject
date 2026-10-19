@@ -88,7 +88,11 @@ class MonitorController extends ChangeNotifier {
   // reached ready we "hold" it connected and only release after it has stayed
   // non-ready for [_connectionGrace] continuously, so a momentary blip that
   // recovers never reaches the UI.
-  static const Duration _connectionGrace = Duration(seconds: 8);
+  // 20 s is deliberately generous: HM-10 clones drop and silently re-attach,
+  // and auto-reconnect usually restores telemetry within a few seconds. Holding
+  // the connected view across that window keeps the user on the main page
+  // through a recoverable drop instead of bouncing them to the gate.
+  static const Duration _connectionGrace = Duration(seconds: 20);
   bool _connectionHeld = false;
   Timer? _connectionLostTimer;
 
@@ -380,15 +384,17 @@ class MonitorController extends ChangeNotifier {
     if (id == null || _usingSimulator) return;
     if (_reconnectTimer?.isActive ?? false) return;
 
-    // Exponential backoff capped at 30 s so a board that is genuinely off does
-    // not keep the radio busy.
-    final delaySeconds = <int>[1, 2, 4, 8, 15, 30];
+    // The first retries are near-instant so a clone that drops and re-attaches
+    // every few seconds is restored before the connection-hold grace expires
+    // and the user never leaves the main page. Only a board that stays gone
+    // backs off toward 30 s so the radio is not pegged.
+    const delaysMs = <int>[300, 600, 1200, 2500, 5000, 10000, 30000];
     final delay = Duration(
-      seconds: delaySeconds[_reconnectAttempts.clamp(0, delaySeconds.length - 1)],
+      milliseconds: delaysMs[_reconnectAttempts.clamp(0, delaysMs.length - 1)],
     );
     _reconnectAttempts++;
 
-    _pushRaw('· Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts)');
+    _pushRaw('· Reconnecting in ${delay.inMilliseconds}ms (attempt $_reconnectAttempts)');
     _reconnectTimer = Timer(delay, () async {
       if (_linkState.grantsAccess) return;
       try {
