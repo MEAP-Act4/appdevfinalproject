@@ -38,5 +38,9 @@ Thumbs.db
 # Exports
 *.csv
 
+# Downloaded CI build artifacts (APK zips pulled from GitHub Actions)
+_apk_out/
+_apk_prof/
+
 # MCP config holds the DESIGNmd API key - never commit
 .kiro/settings/mcp.json
