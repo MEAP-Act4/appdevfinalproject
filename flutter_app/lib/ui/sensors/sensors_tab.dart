@@ -277,6 +277,21 @@ class _StatusStrip extends StatelessWidget {
       );
     }
 
+    if (monitor.leakInjected) {
+      banners.add(
+        NoticeBanner(
+          key: const ValueKey<String>('injected'),
+          title: 'SIMULATED leak (demo)',
+          message:
+              'A demo leak injection is armed, so the leak shown below is forced '
+              'for the presentation and is not a real hardware detection. Turn it '
+              'off in Diagnostics to show the genuine live reading.',
+          icon: Icons.warning_amber_rounded,
+          accent: palette.alert,
+        ),
+      );
+    }
+
     if (monitor.isStale) {
       final seconds = monitor.secondsSinceLastSample ?? 0;
       banners.add(

@@ -146,6 +146,33 @@ class Telemetry extends LeakPacket {
     return excess > 0 ? excess : 0;
   }
 
+  /// Returns a copy with selected fields overridden. Used by the demo-leak
+  /// injection to reshape a real sample into a leak-shaped one while leaving
+  /// everything else (sequence, uptime, timing) authentic.
+  Telemetry copyWith({
+    List<double>? flowLpm,
+    double? balanceLpm,
+    double? expectedLpm,
+    double? thresholdLpm,
+    LeakStatus? status,
+    int? breachStreak,
+    int? faultStreak,
+  }) {
+    return Telemetry(
+      seq: seq,
+      uptimeMs: uptimeMs,
+      flowLpm: flowLpm ?? this.flowLpm,
+      volumeL: volumeL,
+      balanceLpm: balanceLpm ?? this.balanceLpm,
+      expectedLpm: expectedLpm ?? this.expectedLpm,
+      thresholdLpm: thresholdLpm ?? this.thresholdLpm,
+      status: status ?? this.status,
+      breachStreak: breachStreak ?? this.breachStreak,
+      faultStreak: faultStreak ?? this.faultStreak,
+      receivedAt: receivedAt,
+    );
+  }
+
   @override
   String toString() =>
       'Telemetry(seq: $seq, flow: $flowLpm, status: ${status.wire})';

@@ -259,7 +259,70 @@ class _LinkTab extends StatelessWidget {
             ),
           ],
         ),
+        // Demo-leak injection: only meaningful on a real live link (the
+        // simulator and replay already drive leaks on their own).
+        if (!monitor.usingSimulator && !monitor.usingReplay) ...<Widget>[
+          const SizedBox(height: Tokens.s3),
+          const _DemoLeakControl(),
+        ],
       ],
+    );
+  }
+}
+
+/// Arms/disarms the demo-leak injection for a live presentation. Clearly a
+/// test control: the switch copy and the app-wide SIMULATED banner make plain
+/// that an armed injection is not a real hardware detection.
+class _DemoLeakControl extends StatelessWidget {
+  const _DemoLeakControl();
+
+  @override
+  Widget build(BuildContext context) {
+    final monitor = context.watch<MonitorController>();
+    final palette = AppPalette.of(context);
+    final theme = Theme.of(context);
+    final armed = monitor.leakInjected;
+
+    return SurfaceCard(
+      accent: armed ? palette.alert : null,
+      leadingAccentBar: armed,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: CardLabel(
+                  'Demo leak injection',
+                  trailing: armed
+                      ? Text(
+                          'SIMULATED',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: palette.alert,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              Switch(
+                value: armed,
+                onChanged: monitor.setLeakInjection,
+              ),
+            ],
+          ),
+          const SizedBox(height: Tokens.s1),
+          Text(
+            'Forces the live feed to read as a leak for a controlled demo. While '
+            'armed the app shows a SIMULATED marker — this is a presentation aid, '
+            'not a real detection. Turn it off to show the genuine reading, then '
+            'physically open the joint to detect a real leak.',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: palette.textSecondary),
+          ),
+        ],
+      ),
     );
   }
 }

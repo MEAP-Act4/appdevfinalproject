@@ -51,6 +51,14 @@ class MonitorController extends ChangeNotifier {
   bool _usingSimulator = false;
   bool _usingReplay = false;
 
+  /// Demo-leak injection. When armed, incoming live telemetry is reshaped into a
+  /// leak-shaped sample (balance pushed past the threshold, status forced to
+  /// LEAK) so the detection UI, alarm and event log all react exactly as they
+  /// would for a real leak. It is ALWAYS surfaced on screen as "SIMULATED" so it
+  /// can never be mistaken for a genuine hardware detection — it is a
+  /// presentation aid for a controlled demo, not a silent override.
+  bool _leakInjected = false;
+
   // --- Live data ------------------------------------------------------------
   Telemetry? _latest;
   DeviceConfig? _deviceConfig;
@@ -124,6 +132,21 @@ class MonitorController extends ChangeNotifier {
   bool get isConnected => _connectionHeld;
   bool get usingSimulator => _usingSimulator;
   bool get usingReplay => _usingReplay;
+
+  /// Whether the demo-leak injection is armed. The UI shows a prominent
+  /// "SIMULATED LEAK" marker whenever this is true.
+  bool get leakInjected => _leakInjected;
+
+  /// Arms or disarms the demo-leak injection. Reshapes live telemetry into a
+  /// leak while armed; clearing it lets the real feed through again.
+  void setLeakInjection(bool enabled) {
+    if (_leakInjected == enabled) return;
+    _leakInjected = enabled;
+    _pushRaw(enabled
+        ? '· DEMO: simulated leak injection ARMED'
+        : '· DEMO: simulated leak injection cleared');
+    notifyListeners();
+  }
   String? get lastError => _lastError;
   List<DiscoveredDevice> get discovered => _discovered;
   DiscoveredDevice? get connectedDevice => _transport?.connectedDevice;
@@ -503,8 +526,15 @@ class MonitorController extends ChangeNotifier {
     }
   }
 
-  void _onTelemetry(Telemetry telemetry) {
+  void _onTelemetry(Telemetry rawTelemetry) {
     _markTransportReady();
+
+    // Demo-leak injection: reshape the real sample into a leak-shaped one so the
+    // whole detection path (status transition, alarm, event log, chart) fires
+    // exactly as it would on a genuine leak. The reshaped sample keeps the real
+    // sequence/timing; only the balance and verdict are forced. The UI surfaces
+    // `leakInjected` as "SIMULATED" so this is never mistaken for real.
+    final telemetry = _leakInjected ? _injectLeak(rawTelemetry) : rawTelemetry;
 
     _latest = telemetry;
     _lastTelemetryAt = DateTime.now();
@@ -530,6 +560,29 @@ class MonitorController extends ChangeNotifier {
     } else {
       _notifyThrottled();
     }
+  }
+
+  /// Reshapes a real sample into a leak-shaped one for the demo injection.
+  ///
+  /// Keeps the real inlet reading, zeroes most of the outlet flow so water is
+  /// visibly "going missing", pushes the balance well past the threshold and
+  /// forces the status to LEAK with a confirmed breach streak. The downstream
+  /// pipeline then behaves identically to a genuine leak.
+  Telemetry _injectLeak(Telemetry t) {
+    final inlet = t.flowLpm.isNotEmpty ? t.flowLpm[0] : 3.0;
+    // Make the shortfall unambiguous: outlets drop to ~20% of inlet so roughly
+    // 80% of the inlet flow is unaccounted for.
+    final outA = inlet * 0.1;
+    final outB = inlet * 0.1;
+    final balance = inlet - (outA + outB);
+    final threshold = t.thresholdLpm > 0 ? t.thresholdLpm : 0.5;
+    return t.copyWith(
+      flowLpm: <double>[inlet, outA, outB],
+      balanceLpm: balance,
+      thresholdLpm: threshold,
+      status: LeakStatus.leak,
+      breachStreak: 99,
+    );
   }
 
   /// Emit a UI notification now and reset the throttle window.
