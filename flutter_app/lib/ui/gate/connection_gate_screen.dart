@@ -12,6 +12,7 @@ import '../../state/monitor_controller.dart';
 import '../common/alert_banner.dart';
 import '../common/motion_widgets.dart';
 import '../common/surface_card.dart';
+import 'replay_picker.dart';
 
 /// The gate. Until the board is talking, this is the whole app.
 ///
@@ -692,6 +693,16 @@ class _GateActions extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+        const SizedBox(height: Tokens.s1),
+        // Replay a real recorded dataset through the live detection pipeline.
+        // Distinct from demo data: these are real readings, re-evaluated so the
+        // app actually detects the leak rather than replaying a stored label.
+        TextButton.icon(
+          onPressed: busy ? null : () => ReplayPicker.show(context),
+          icon: const Icon(Icons.play_circle_outline, size: 18),
+          label: const Text('Replay recorded data'),
+          style: TextButton.styleFrom(foregroundColor: palette.textSecondary),
         ),
       ],
     );

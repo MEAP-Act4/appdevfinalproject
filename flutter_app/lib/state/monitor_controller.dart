@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../core/protocol/leak_protocol.dart';
 import '../data/ble/hm10_transport.dart';
 import '../data/ble/leak_transport.dart';
+import '../data/ble/replay_transport.dart';
 import '../data/ble/simulated_transport.dart';
 import '../data/db/app_database.dart';
 import '../data/models/aggregates.dart';
@@ -48,6 +49,7 @@ class MonitorController extends ChangeNotifier {
   List<DiscoveredDevice> _discovered = const <DiscoveredDevice>[];
   String? _lastError;
   bool _usingSimulator = false;
+  bool _usingReplay = false;
 
   // --- Live data ------------------------------------------------------------
   Telemetry? _latest;
@@ -121,6 +123,7 @@ class MonitorController extends ChangeNotifier {
   /// "feed is quiet" signal and never flips this.
   bool get isConnected => _connectionHeld;
   bool get usingSimulator => _usingSimulator;
+  bool get usingReplay => _usingReplay;
   String? get lastError => _lastError;
   List<DiscoveredDevice> get discovered => _discovered;
   DiscoveredDevice? get connectedDevice => _transport?.connectedDevice;
@@ -244,6 +247,7 @@ class MonitorController extends ChangeNotifier {
     await _detach();
     _transport = transport;
     _usingSimulator = transport is SimulatedTransport;
+    _usingReplay = transport is ReplayTransport;
 
     _stateSub = transport.stateStream.listen((state) {
       _linkState = state;
@@ -365,6 +369,25 @@ class MonitorController extends ChangeNotifier {
     await _transport!.connect(SimulatedTransport.demoDeviceId);
   }
 
+  /// Replays a real recorded dataset ([csv], the app's own export format)
+  /// through the live detection pipeline at [speed]. The verdict is recomputed
+  /// from the recorded flows, so this genuinely detects leaks on real data
+  /// without hardware — clearly a replay path, never presented as live.
+  Future<void> startReplay(
+    String csv, {
+    ReplaySpeed speed = ReplaySpeed.fast,
+    String? label,
+  }) async {
+    _lastError = null;
+    await _attach(ReplayTransport(csv: csv, speed: speed, label: label));
+    try {
+      await _transport!.connect(ReplayTransport.replayDeviceId);
+    } on TransportFailure catch (failure) {
+      _lastError = failure.message;
+      notifyListeners();
+    }
+  }
+
   Future<void> disconnect() async {
     _reconnectTimer?.cancel();
     _targetDeviceId = null;
@@ -474,6 +497,8 @@ class MonitorController extends ChangeNotifier {
     if (transport is Hm10Transport) {
       transport.markReady();
     } else if (transport is SimulatedTransport) {
+      transport.markReady();
+    } else if (transport is ReplayTransport) {
       transport.markReady();
     }
   }

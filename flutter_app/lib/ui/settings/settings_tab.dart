@@ -1005,20 +1005,27 @@ class _ConnectionSection extends StatelessWidget {
             children: <Widget>[
               SettingInfo(
                 title: 'Status',
-                subtitle: monitor.usingSimulator
-                    ? 'Simulated feed — no hardware attached'
-                    : monitor.connectedDevice?.displayName ?? 'Not connected',
+                subtitle: monitor.usingReplay
+                    ? 'Replaying recorded data — no hardware attached'
+                    : monitor.usingSimulator
+                        ? 'Simulated feed — no hardware attached'
+                        : monitor.connectedDevice?.displayName ??
+                            'Not connected',
                 icon: Icons.sensors,
-                value: monitor.isConnected
-                    ? 'LIVE'
-                    : monitor.isStale
-                        ? 'STALE'
-                        : 'OFFLINE',
-                valueColor: monitor.isConnected
-                    ? palette.normal
-                    : monitor.isStale
-                        ? palette.watch
-                        : palette.idle,
+                value: monitor.usingReplay
+                    ? 'REPLAY'
+                    : monitor.isConnected
+                        ? 'LIVE'
+                        : monitor.isStale
+                            ? 'STALE'
+                            : 'OFFLINE',
+                valueColor: monitor.usingReplay
+                    ? palette.accentText
+                    : monitor.isConnected
+                        ? palette.normal
+                        : monitor.isStale
+                            ? palette.watch
+                            : palette.idle,
               ),
               SettingSwitch(
                 title: 'Reconnect automatically',

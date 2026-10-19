@@ -211,13 +211,15 @@ class _LinkChip extends StatelessWidget {
             children: <Widget>[
               PulseDot(color: colour, size: 6, active: connected),
               Text(
-                monitor.usingSimulator
-                    ? 'DEMO'
-                    : connected
-                        ? 'LIVE'
-                        : monitor.isStale
-                            ? 'STALE'
-                            : 'OFFLINE',
+                monitor.usingReplay
+                    ? 'REPLAY'
+                    : monitor.usingSimulator
+                        ? 'DEMO'
+                        : connected
+                            ? 'LIVE'
+                            : monitor.isStale
+                                ? 'STALE'
+                                : 'OFFLINE',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: colour,
                   fontSize: 10,
@@ -255,6 +257,21 @@ class _StatusStrip extends StatelessWidget {
           icon: Icons.science_outlined,
           // NoticeBanner spends this on its title, message and icon, with only
           // a 4px bar and a 10% wash besides, so it is a text colour here.
+          accent: palette.accentText,
+        ),
+      );
+    }
+
+    if (monitor.usingReplay) {
+      banners.add(
+        NoticeBanner(
+          key: const ValueKey<String>('replay'),
+          title: 'Replaying recorded data',
+          message:
+              'These are real recorded readings played back and re-evaluated by '
+              'the live detection logic — not a live Arduino link. Leaks are '
+              'detected here exactly as they would be in real time.',
+          icon: Icons.play_circle_outline,
           accent: palette.accentText,
         ),
       );
